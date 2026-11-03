@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* Fonty hostowane lokalnie (bez Google Fonts w czasie działania i budowania). */
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo-latin-wdth-normal.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo-latin-ext-wdth-normal.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2-variations");
+  font-weight: 100 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-ext-wght-normal.woff2") format("woff2-variations");
+  font-weight: 100 800;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Styl „reżyserka” — tokeny z projektu ekranów. */
+@theme {
+  --color-bg: #0e1013;
+  --color-card: #171a1f;
+  --color-card-2: #1d2127;
+  --color-chip: #262a31;
+  --color-line: #2a2f37;
+  --color-line-2: #3a404a;
+  --color-ink: #f2f3f5;
+  --color-mute: #9aa1ac;
+  --color-rec: #ff5533;
+  --color-rec-soft: #ff7a5c;
+  --color-ok: #3ddc97;
+  --color-ok-bg: #1f3a2e;
+  --color-warn: #ffb547;
+  --color-warn-bg: #3a2e17;
+  --color-bad: #ff6b5c;
+  --color-bad-bg: #3a1d1a;
+  --color-info: #8fb8ff;
+  --color-info-bg: #1b2740;
+
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-bg);
+  color-scheme: dark;
+}
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100dvh;
+}
+
+.wide { font-stretch: 116%; }
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--color-mute);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.inp {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+  padding: 0 12px;
+  color: var(--color-ink);
+  font-size: 15px;
+  outline: none;
+  color-scheme: dark;
+}
+.inp:focus { border-color: var(--color-line-2); }
+
+:focus-visible {
+  outline: 2px solid var(--color-rec-soft);
+  outline-offset: 2px;
+}
+
+/* Podgląd aparatu z html5-qrcode wypełnia ramkę. */
+#qr-reader video { object-fit: cover; width: 100% !important; height: 100% !important; }
+#qr-reader { border: 0 !important; }
+#qr-reader img[alt="Info icon"], #qr-reader__dashboard { display: none !important; }
+
+@media print {
+  html, body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+}

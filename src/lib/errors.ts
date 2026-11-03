@@ -1,0 +1,7 @@
+export class HttpError extends Error {
+  constructor(public status: number, public code: string, message?: string, public extra?: Record<string, unknown>) {
+    super(message ?? code);
+  }
+}
+
+export type User = { oid: string; email: string; name: string; admin: boolean };
