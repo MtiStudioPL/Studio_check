@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth, loadUser } from "@/lib/auth";
-import { AdminNav } from "./nav";
+import { AdminNav, AdminTransition } from "./nav";
 
 export const metadata = { title: "Panel · Studio wideo" };
 
@@ -16,8 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-dvh lg:flex">
       <AdminNav name={u.imie} />
-      <main className="min-w-0 flex-1 px-4 pb-16 pt-4 lg:px-8 lg:pt-8">
-        <div className="mx-auto max-w-6xl">{children}</div>
+      <main className="min-w-0 flex-1 px-4 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-4 lg:px-8 lg:pt-8">
+        <div className="mx-auto max-w-6xl">
+          <AdminTransition>{children}</AdminTransition>
+        </div>
       </main>
     </div>
   );

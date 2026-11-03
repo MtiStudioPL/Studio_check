@@ -61,13 +61,17 @@ export default function ObecnosciPage() {
       ) : (
         <>
           <Card className="overflow-x-auto">
-            <table className="w-full min-w-[520px] text-sm">
+            {/* Telefon: węższe marginesy i krótsze nagłówki, żeby tabela mieściła się bez przewijania w bok. */}
+            <table className="w-full text-sm">
               <thead className="text-left text-xs text-mute">
                 <tr className="border-b border-line">
-                  <th className="px-4 py-3 font-medium">Osoba</th>
-                  <th className="px-4 py-3 font-medium">Wizyty</th>
-                  <th className="px-4 py-3 font-medium">Łącznie</th>
-                  <th className="px-4 py-3 font-medium">Bez check-outu</th>
+                  <th className="px-3 py-3 font-medium sm:px-4">Osoba</th>
+                  <th className="px-3 py-3 font-medium sm:px-4">Wizyty</th>
+                  <th className="px-3 py-3 font-medium sm:px-4">Łącznie</th>
+                  <th className="px-3 py-3 font-medium sm:px-4">
+                    <span className="sm:hidden">Auto</span>
+                    <span className="hidden sm:inline">Bez check-outu</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -80,13 +84,13 @@ export default function ObecnosciPage() {
                 ) : (
                   d.osoby.map((o) => (
                     <tr key={o.email}>
-                      <td className="px-4 py-2.5">
-                        <div className="font-semibold">{o.imie}</div>
-                        <div className="text-xs text-mute">{o.email}</div>
+                      <td className="max-w-0 px-3 py-2.5 sm:max-w-none sm:px-4">
+                        <div className="truncate font-semibold">{o.imie}</div>
+                        <div className="truncate text-xs text-mute">{o.email}</div>
                       </td>
-                      <td className="px-4 py-2.5 font-mono">{o.wizyty}</td>
-                      <td className="px-4 py-2.5 font-mono">{h(o.minuty)}</td>
-                      <td className={`px-4 py-2.5 font-mono ${o.auto ? "text-warn" : "text-mute"}`}>{o.auto}</td>
+                      <td className="whitespace-nowrap px-3 py-2.5 font-mono sm:px-4">{o.wizyty}</td>
+                      <td className="whitespace-nowrap px-3 py-2.5 font-mono sm:px-4">{h(o.minuty)}</td>
+                      <td className={`px-3 py-2.5 font-mono sm:px-4 ${o.auto ? "text-warn" : "text-mute"}`}>{o.auto}</td>
                     </tr>
                   ))
                 )}

@@ -49,7 +49,7 @@ export default function ObecnoscPage() {
           </Card>
         )}
 
-        <section className="flex flex-col gap-2">
+        <section className="stagger flex flex-col gap-2">
           <h2 className="label">W studiu teraz {teraz ? `(${teraz.length})` : ""}</h2>
           {!teraz ? (
             <Skeleton rows={2} />
@@ -73,7 +73,7 @@ export default function ObecnoscPage() {
           ) : moje.length === 0 ? (
             <Empty>Brak wizyt w ostatnich 30 dniach.</Empty>
           ) : (
-            <ul className="flex flex-col gap-1.5">
+            <ul className="stagger flex flex-col gap-1.5">
               {moje.map((w) => {
                 const ms = (w.wyjscie ? new Date(w.wyjscie).getTime() : Date.now()) - new Date(w.wejscie).getTime();
                 return (

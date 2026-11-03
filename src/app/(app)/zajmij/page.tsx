@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button, Empty, KodChip, ScreenHeader, Skeleton, cx, useToast } from "@/components/ui";
 import { ISearch } from "@/components/icons";
 import { api, ApiError, fmtDateTime, fmtTime } from "@/lib/client";
+import { haptic } from "@/lib/motion";
 
 type Stan = "wolny" | "zajety" | "oczekuje" | "poza_szkola" | "wypozyczony";
 type Dost = { kod: number; nazwa: string; kategoria: string; stan: Stan; opis: string | null };
@@ -90,13 +91,15 @@ function Zajmij() {
     loadMoje().catch(() => {});
   }, [loadMoje]);
 
-  const toggle = (k: number) =>
+  const toggle = (k: number) => {
+    haptic("tap");
     setWybrane((w) => {
       const n = new Set(w);
       if (n.has(k)) n.delete(k);
       else n.add(k);
       return n;
     });
+  };
 
   const shown = useMemo(() => {
     if (!dost) return [];
@@ -140,7 +143,7 @@ function Zajmij() {
   return (
     <div className="flex flex-col">
       <ScreenHeader title="Zajmij sprzęt" />
-      <div className={cx("flex flex-col gap-4 px-5 pt-2", wybrane.size > 0 && "pb-40")}>
+      <div className={cx("flex flex-col gap-4 px-5 pt-2", wybrane.size > 0 && "pb-36")}>
         <p className="text-[13px] text-mute">Wybierz termin i sprzęt. Wniosek trafia do administratora, który go zatwierdza albo odrzuca.</p>
 
         <div className="grid grid-cols-2 gap-3 rounded-[18px] border border-line bg-card p-4">
@@ -171,13 +174,13 @@ function Zajmij() {
         {!dost ? (
           blad ? null : <Skeleton rows={5} />
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="stagger flex flex-col gap-1.5">
             {shown.map((d) => {
               const on = wybrane.has(d.kod);
               const disabled = d.stan === "zajety" && !on;
               return (
                 <li key={d.kod}>
-                  <label className={cx("flex min-h-14 items-center gap-3 rounded-[14px] border bg-card px-3 py-2.5", on ? "border-rec" : "border-line", disabled && "opacity-60")}>
+                  <label className={cx("press-soft flex min-h-14 items-center gap-3 rounded-[14px] border bg-card px-3 py-2.5 transition-colors duration-200", on ? "border-rec bg-rec/[0.06]" : "border-line", disabled && "opacity-60")}>
                     <input type="checkbox" checked={on} disabled={disabled} onChange={() => toggle(d.kod)} className="h-5 w-5 shrink-0 accent-[#FF5533]" />
                     <KodChip kod={d.kod} />
                     <span className="min-w-0 flex-1">
@@ -223,7 +226,10 @@ function Zajmij() {
       </div>
 
       {wybrane.size > 0 && (
-        <div className="fixed inset-x-0 bottom-[84px] z-30 mx-auto flex max-w-md flex-col gap-2 border-t border-line bg-card px-5 py-3 shadow-[0_-16px_40px_rgba(0,0,0,0.5)]">
+        <div
+          className="material slide-up fixed inset-x-0 z-30 mx-auto flex max-w-md flex-col gap-2 rounded-t-[22px] border-t border-line px-5 py-3 shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
+          style={{ bottom: "max(var(--nav-h), var(--kb))" }}
+        >
           <input value={cel} onChange={(e) => setCel(e.target.value)} maxLength={500} placeholder="Do czego? np. nagranie wywiadu (opcjonalnie)" aria-label="Cel rezerwacji" className="inp" />
           <Button variant="rec" onClick={wyslij} busy={busy === "wyslij"} disabled={!!blad || wybraneZajete.length > 0} className="h-12 rounded-2xl">
             {wybraneZajete.length ? `Zajęte: ${wybraneZajete.map((z) => z.nazwa).join(", ")}` : `Zajmij ${wybrane.size} szt. · wyślij do administratora`}

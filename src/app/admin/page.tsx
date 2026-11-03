@@ -118,7 +118,7 @@ export default function PulpitPage() {
             <Tile label="Inwentaryzacja" value={`${k.sprawdzone} / ${k.wszystkie}`} tone={k.sprawdzone === k.wszystkie ? "ok" : undefined} />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
             <Card className="p-4">
               <h2 className="label mb-3 flex items-center gap-2">
                 <IAlert size={16} className="text-bad" /> Wymaga uwagi
@@ -207,7 +207,7 @@ export default function PulpitPage() {
             </Card>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Card className="p-4 lg:col-span-2">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="label">Aktywność · 14 dni</h2>

@@ -60,6 +60,8 @@
 html {
   background: var(--color-bg);
   color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 body {
   background: var(--color-bg);
@@ -67,6 +69,139 @@ body {
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
   min-height: 100dvh;
+  /* Strona nigdy nie jeździ w bok pod palcem (clip, nie hidden — sticky dalej działa). */
+  overflow-x: clip;
+  /* Notch, wyspa i zaokrąglone rogi: viewport-fit=cover rysuje pod nimi, więc odsuwamy treść. */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Pasek statusu w aplikacji z ekranu głównego: treść przewija się pod nim, ale tekst nie wchodzi pod zegar. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background: var(--color-bg);
+  z-index: 80;
+  pointer-events: none;
+}
+
+/* ---------- ruch ---------- */
+:root {
+  /* Wysokość dolnej nawigacji z paskiem gestów iPhone'a i wysokość klawiatury iOS (ustawia ją MotionRoot). */
+  --nav-h: calc(61px + max(14px, env(safe-area-inset-bottom)));
+  --kb: 0px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Sprężyna z lekkim odbiciem (tłumienie ≈ 0.8) jako krzywa CSS; starsze przeglądarki biorą --ease-out. */
+  --ease-spring: var(--ease-out);
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.077, 1.121 24.6%, 1.149 27.3%, 1.158 29.9%, 1.155 32.4%, 1.135 35.5%, 1.064 42.6%, 1.025 47.3%, 0.997 52.1%, 0.986 56.5%, 0.983 61.1%, 0.992 71.9%, 1);
+  }
+}
+
+/* Wciśnięcie widać od razu, na dotknięciu, nie dopiero po puszczeniu. */
+.press { transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+.press:active { transform: scale(0.97); transition-duration: 80ms; }
+.press-soft:active { transform: scale(0.985); transition: transform 80ms var(--ease-out); }
+
+button, nav a { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+button { touch-action: manipulation; }
+
+/* Ekran wjeżdża z kierunku nawigacji (--dx/--dy ustawia PageTransition). */
+@keyframes page-in {
+  from { opacity: 0; transform: translate3d(var(--dx, 0px), var(--dy, 10px), 0); }
+}
+/* backwards, nie both: po animacji nie zostaje transform, który zepsułby position: fixed w środku. */
+.page-in { animation: page-in 380ms var(--ease-out) backwards; }
+
+/* Listy pojawiają się kaskadą, ale krótko: ostatni element najpóźniej po ~250 ms. */
+@keyframes rise {
+  from { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.985); }
+}
+.stagger > * { animation: rise 420ms var(--ease-out) backwards; animation-delay: 250ms; }
+.stagger > :nth-child(1) { animation-delay: 0ms; }
+.stagger > :nth-child(2) { animation-delay: 28ms; }
+.stagger > :nth-child(3) { animation-delay: 56ms; }
+.stagger > :nth-child(4) { animation-delay: 84ms; }
+.stagger > :nth-child(5) { animation-delay: 112ms; }
+.stagger > :nth-child(6) { animation-delay: 140ms; }
+.stagger > :nth-child(7) { animation-delay: 168ms; }
+.stagger > :nth-child(8) { animation-delay: 196ms; }
+.stagger > :nth-child(9) { animation-delay: 224ms; }
+
+/* Panel akcji wysuwa się od dołu, gdy jest co zatwierdzić. */
+@keyframes slide-up { from { transform: translate3d(0, 110%, 0); } }
+.slide-up { animation: slide-up 460ms var(--ease-spring) both; }
+
+/* Trafiony kod QR: ramka „łapie” kod i błyska. */
+@keyframes scan-hit {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.86); }
+  100% { transform: scale(1); }
+}
+@keyframes scan-flash {
+  0% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+.scan-hit { animation: scan-hit 420ms var(--ease-spring); }
+/* Linia skanowania płynie przez ramkę w górę i w dół (wolno, bez mrugania). */
+@keyframes scan-line {
+  0%, 100% { transform: translate3d(0, 14px, 0); opacity: 0.6; }
+  50% { transform: translate3d(0, 134px, 0); opacity: 1; }
+}
+.scan-line { animation: scan-line 2.6s var(--ease-in-out) infinite; }
+.scan-flash { animation: scan-flash 520ms var(--ease-out) both; }
+
+/* Menu wyrasta z przycisku, który je otworzył (transform-origin w klasie origin-*). */
+@keyframes menu-in { from { opacity: 0; transform: scale(0.92) translate3d(0, -4px, 0); } }
+.menu-in { animation: menu-in 260ms var(--ease-spring) backwards; }
+
+/* Zmienione pole przyciąga wzrok na chwilę. */
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.pop { animation: pop 360ms var(--ease-spring); }
+
+/* Odświeżanie: strzałka zamienia się w kółko. */
+.ptr-spin > span { display: none; }
+.ptr-spin::after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2.4px solid currentColor;
+  border-top-color: transparent;
+  animation: ptr-rot 700ms linear infinite;
+}
+@keyframes ptr-rot { to { transform: rotate(360deg); } }
+
+/* Dolna nawigacja i arkusze jako materiał: treść przewija się pod spodem. */
+.material {
+  background: rgb(14 16 19 / 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .material { background: var(--color-bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-line { animation: none; transform: translate3d(0, 74px, 0); }
+  .page-in, .stagger > *, .scan-hit, .pop, .slide-up, .menu-in { animation-name: fade-in !important; animation-duration: 160ms !important; animation-delay: 0ms !important; }
+  .press:active, .press-soft:active { transform: none; }
+}
+@keyframes fade-in { from { opacity: 0; } }
+
+/* iPhone przybliża stronę przy polu z czcionką < 16 px — na ekranach dotykowych pola mają zawsze 16 px. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: max(16px, 1em) !important; }
 }
 
 .wide { font-stretch: 116%; }

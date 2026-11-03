@@ -4,12 +4,24 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/client";
 import { Button, useToast } from "./ui";
 import { IX } from "./icons";
+import { Sheet, useSheetClose } from "./sheet";
 
 type Osoba = { email: string; imie: string; status: string };
 
+type Props = { kod: number; nazwa: string; meEmail?: string; onClose: () => void; onDone: () => void };
+
 /** Administrator oznacza sprzęt jako „poza szkołą” dla siebie albo innej osoby. */
-export function PozaSzkolaDialog({ kod, nazwa, meEmail, onClose, onDone }: { kod: number; nazwa: string; meEmail?: string; onClose: () => void; onDone: () => void }) {
+export function PozaSzkolaDialog(props: Props) {
+  return (
+    <Sheet onClose={props.onClose} label="Poza szkołą">
+      <PozaForm {...props} />
+    </Sheet>
+  );
+}
+
+function PozaForm({ kod, nazwa, meEmail, onDone }: Props) {
   const toast = useToast();
+  const close = useSheetClose();
   const [osoby, setOsoby] = useState<Osoba[]>([]);
   const [email, setEmail] = useState(meEmail ?? "");
   const [miejsce, setMiejsce] = useState("w domu");
@@ -30,7 +42,7 @@ export function PozaSzkolaDialog({ kod, nazwa, meEmail, onClose, onDone }: { kod
       await api(`/api/admin/sprzet/${kod}/poza-szkola`, { method: "POST", body: { email, miejsce, planowanyZwrot: zwrot || null, uwagi: uwagi || null } });
       toast(`${nazwa}: poza szkołą.`);
       onDone();
-      onClose();
+      close();
     } catch (err) {
       toast(err instanceof ApiError ? err.message : "Nie udało się.", "bad");
     } finally {
@@ -41,21 +53,13 @@ export function PozaSzkolaDialog({ kod, nazwa, meEmail, onClose, onDone }: { kod
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Warsaw" }).format(new Date());
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 sm:items-center" onClick={onClose}>
-      <form
-        role="dialog"
-        aria-modal="true"
-        aria-label="Poza szkołą"
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={zapisz}
-        className="flex w-full max-w-md flex-col gap-4 rounded-t-[26px] border border-line bg-card p-5 sm:rounded-[22px]"
-      >
+    <form onSubmit={zapisz} className="flex flex-col gap-4 px-5 pb-1 pt-1">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-bold">Poza szkołą</h2>
             <p className="text-sm text-mute">{nazwa}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Zamknij" className="flex h-11 w-11 items-center justify-center rounded-xl text-mute">
+          <button type="button" onClick={close} aria-label="Zamknij" className="flex h-11 w-11 items-center justify-center rounded-xl text-mute">
             <IX />
           </button>
         </div>
@@ -92,7 +96,6 @@ export function PozaSzkolaDialog({ kod, nazwa, meEmail, onClose, onDone }: { kod
         <Button type="submit" variant="rec" busy={busy} className="h-12 rounded-2xl">
           Zapisz
         </Button>
-      </form>
-    </div>
+    </form>
   );
 }

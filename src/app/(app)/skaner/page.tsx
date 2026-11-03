@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { QrScanner } from "@/components/qr-scanner";
 import { PozaSzkolaDialog } from "@/components/poza-szkola-dialog";
+import { Sheet } from "@/components/sheet";
 import { Button, ScreenHeader, Skeleton, StatusPill, pozaOpis, useToast } from "@/components/ui";
 import { IEnter, ISearch, IX } from "@/components/icons";
 import { useMe } from "@/components/me";
@@ -46,6 +47,11 @@ function Skaner() {
   const [busy, setBusy] = useState<string | null>(null);
   const [proponujCheckin, setProponujCheckin] = useState(false);
   const [poza, setPoza] = useState(false);
+  // Ostatnio wybrany sprzęt zostaje w arkuszu, dopóki ten nie zjedzie — treść nie znika w pół animacji.
+  const [shownSel, setShownSel] = useState<SprzetView | null>(null);
+  useEffect(() => {
+    if (sel) setShownSel(sel);
+  }, [sel]);
   const reqId = useRef<string>(uuid());
 
   const load = useCallback(async () => {
@@ -125,7 +131,8 @@ function Skaner() {
     return lista.filter((s) => s.nazwa.toLowerCase().includes(t) || s.kategoria.toLowerCase().includes(t) || String(s.kod) === t);
   }, [lista, q]);
 
-  const mojaPozycja = sel?.status === "wypozyczony" && sel.email === me?.email;
+  const cur = sel ?? shownSel;
+  const mojaPozycja = cur?.status === "wypozyczony" && cur.email === me?.email;
 
   return (
     <div className="flex flex-col">
@@ -164,10 +171,10 @@ function Skaner() {
             {!lista ? (
               <Skeleton rows={4} />
             ) : (
-              <ul className="flex flex-col gap-1.5">
+              <ul className="stagger flex flex-col gap-1.5">
                 {shown.map((s) => (
                   <li key={s.kod}>
-                    <button onClick={() => select(s)} className="flex min-h-12 w-full items-center gap-3 rounded-[14px] border border-line bg-card px-3 py-2.5 text-left">
+                    <button onClick={() => select(s)} className="press-soft flex min-h-12 w-full items-center gap-3 rounded-[14px] border border-line bg-card px-3 py-2.5 text-left">
                       <span className="w-8 font-mono text-xs font-semibold text-mute">{s.kod}</span>
                       <span className="flex-1 text-sm font-semibold">{s.nazwa}</span>
                       <span className={`text-xs ${s.status === "poza_szkola" ? "text-info" : s.status === "wypozyczony" ? "text-warn" : "text-ok"}`}>
@@ -183,76 +190,81 @@ function Skaner() {
         )}
       </div>
 
-      {sel && (
-        <section
-          aria-label="Wybrany sprzęt"
-          className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md flex-col gap-3.5 rounded-t-[26px] border-t border-line bg-card px-5 pt-3 shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
-          style={{ paddingBottom: "max(28px, env(safe-area-inset-bottom))" }}
+      {shownSel && cur && (
+        <Sheet
+          modal={false}
+          open={!!sel}
+          label="Wybrany sprzęt"
+          onClose={() => {
+            setShownSel(null);
+            if (sel) select(null);
+          }}
         >
-          <span className="h-1 w-10 self-center rounded-full bg-line-2" />
-          <div className="flex items-start gap-3">
-            <span className="rounded-[10px] bg-chip px-2.5 py-2 font-mono text-[15px] font-semibold">{String(sel.kod).padStart(3, "0")}</span>
-            <div className="min-w-0 flex-1">
-              <div className="text-lg font-bold">{sel.nazwa}</div>
-              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px]">
-                <StatusPill status={sel.status} over24={hoursSince(sel.odKiedy) > 24} />
-                {sel.status === "wypozyczony" && (
-                  <span className="text-mute">
-                    ma: {mojaPozycja ? "Ty" : sel.ktoMa}, od {fmtTime(sel.odKiedy)}
-                  </span>
-                )}
-                {sel.status === "poza_szkola" && (
-                  <span className="text-mute">
-                    u: {sel.email === me?.email ? "Ty" : sel.ktoMa} · {pozaOpis(sel)}
-                  </span>
+          <div className="flex flex-col gap-3.5 px-5 pt-1">
+            <div className="flex items-start gap-3">
+              <span className="rounded-[10px] bg-chip px-2.5 py-2 font-mono text-[15px] font-semibold">{String(cur.kod).padStart(3, "0")}</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-lg font-bold">{cur.nazwa}</div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px]">
+                  <StatusPill status={cur.status} over24={hoursSince(cur.odKiedy) > 24} />
+                  {cur.status === "wypozyczony" && (
+                    <span className="text-mute">
+                      ma: {mojaPozycja ? "Ty" : cur.ktoMa}, od {fmtTime(cur.odKiedy)}
+                    </span>
+                  )}
+                  {cur.status === "poza_szkola" && (
+                    <span className="text-mute">
+                      u: {cur.email === me?.email ? "Ty" : cur.ktoMa} · {pozaOpis(cur)}
+                    </span>
+                  )}
+                </div>
+                {cur.rezerwacja && (
+                  <div className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${cur.rezerwacja.email === me?.email ? "bg-ok-bg text-ok" : "bg-warn-bg text-warn"}`}>
+                    Zarezerwowane: {cur.rezerwacja.email === me?.email ? "Ty" : cur.rezerwacja.imie}, {fmtTime(cur.rezerwacja.od)}–{fmtTime(cur.rezerwacja.do)}
+                  </div>
                 )}
               </div>
-              {sel.rezerwacja && (
-                <div className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${sel.rezerwacja.email === me?.email ? "bg-ok-bg text-ok" : "bg-warn-bg text-warn"}`}>
-                  Zarezerwowane: {sel.rezerwacja.email === me?.email ? "Ty" : sel.rezerwacja.imie}, {fmtTime(sel.rezerwacja.od)}–{fmtTime(sel.rezerwacja.do)}
-                </div>
-              )}
+              <button onClick={() => select(null)} aria-label="Wyczyść wybór" className="flex h-11 w-11 items-center justify-center rounded-xl text-mute">
+                <IX size={20} />
+              </button>
             </div>
-            <button onClick={() => select(null)} aria-label="Wyczyść wybór" className="flex h-11 w-11 items-center justify-center rounded-xl text-mute">
-              <IX size={20} />
-            </button>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="uwagi" className="text-[13px] text-mute">
+                Uwagi (opcjonalnie)
+              </label>
+              <input
+                id="uwagi"
+                type="text"
+                maxLength={500}
+                value={uwagi}
+                onChange={(e) => setUwagi(e.target.value)}
+                placeholder="np. brak gąbki na mikrofonie"
+                className="h-12 rounded-[14px] border border-line bg-bg px-3.5 text-[15px] outline-none placeholder:text-mute/70"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Button onClick={() => act("biore")} busy={busy === "biore"} disabled={!!busy} className="h-14 rounded-2xl text-[17px] font-bold">
+                Biorę
+              </Button>
+              <Button variant="ok" onClick={() => act("oddaje")} busy={busy === "oddaje"} disabled={!!busy} className="h-14 rounded-2xl text-[17px]">
+                Oddaję
+              </Button>
+            </div>
+            <div className="flex justify-between gap-2">
+              <button onClick={() => act("sprawdzam")} disabled={!!busy} className="min-h-11 text-sm font-semibold text-mute underline-offset-4 hover:underline disabled:opacity-50">
+                Sprawdzam — jest w studiu
+              </button>
+              <Link href={`/zajmij?kod=${cur.kod}`} className="flex min-h-11 items-center text-sm font-semibold text-rec-soft">
+                Zajmij na później →
+              </Link>
+            </div>
+            {me?.rola === "admin" && (
+              <Button variant="ghost" onClick={() => setPoza(true)} disabled={!!busy} className="border-info/40 text-info">
+                Poza szkołą (np. biorę do domu)…
+              </Button>
+            )}
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="uwagi" className="text-[13px] text-mute">
-              Uwagi (opcjonalnie)
-            </label>
-            <input
-              id="uwagi"
-              type="text"
-              maxLength={500}
-              value={uwagi}
-              onChange={(e) => setUwagi(e.target.value)}
-              placeholder="np. brak gąbki na mikrofonie"
-              className="h-12 rounded-[14px] border border-line bg-bg px-3.5 text-[15px] outline-none placeholder:text-mute/70"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Button onClick={() => act("biore")} busy={busy === "biore"} disabled={!!busy} className="h-14 rounded-2xl text-[17px] font-bold">
-              Biorę
-            </Button>
-            <Button variant="ok" onClick={() => act("oddaje")} busy={busy === "oddaje"} disabled={!!busy} className="h-14 rounded-2xl text-[17px]">
-              Oddaję
-            </Button>
-          </div>
-          <div className="flex justify-between gap-2">
-            <button onClick={() => act("sprawdzam")} disabled={!!busy} className="min-h-11 text-sm font-semibold text-mute underline-offset-4 hover:underline disabled:opacity-50">
-              Sprawdzam — jest w studiu
-            </button>
-            <Link href={`/zajmij?kod=${sel.kod}`} className="flex min-h-11 items-center text-sm font-semibold text-rec-soft">
-              Zajmij na później →
-            </Link>
-          </div>
-          {me?.rola === "admin" && (
-            <Button variant="ghost" onClick={() => setPoza(true)} disabled={!!busy} className="border-info/40 text-info">
-              Poza szkołą (np. biorę do domu)…
-            </Button>
-          )}
-        </section>
+        </Sheet>
       )}
       {poza && sel && (
         <PozaSzkolaDialog

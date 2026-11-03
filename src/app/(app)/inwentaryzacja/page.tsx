@@ -5,6 +5,8 @@ import { QrScanner } from "@/components/qr-scanner";
 import { Button, KodChip, ScreenHeader, Skeleton, cx, useToast } from "@/components/ui";
 import { IScan } from "@/components/icons";
 import { useMe } from "@/components/me";
+import { AnimatedNumber } from "@/components/animated-number";
+import { haptic } from "@/lib/motion";
 import { api, ApiError, fmtTime } from "@/lib/client";
 import { parseKod } from "@/lib/qr";
 import type { SprzetView } from "@/lib/equipment";
@@ -40,6 +42,7 @@ export default function InwentaryzacjaPage() {
         const lista = d.lista.map((s) => (s.kod === kod ? r.pozycja : s));
         return { lista, liczniki: { ...d.liczniki, sprawdzone: lista.filter((s) => s.jest).length } };
       });
+      haptic(jest ? "snap" : "tap");
     } catch (e) {
       toast(e instanceof ApiError ? e.message : "Nie udało się zapisać.", "bad");
     } finally {
@@ -102,12 +105,12 @@ export default function InwentaryzacjaPage() {
         <div className="rounded-[18px] border border-line bg-card p-4">
           <div className="flex items-baseline justify-between">
             <span className="font-mono text-[28px] font-semibold">
-              {done} <span className="text-mute">/ {all}</span>
+              <AnimatedNumber value={done} /> <span className="text-mute">/ {all}</span>
             </span>
             <span className="text-[13px] text-mute">sprawdzone</span>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-chip" role="progressbar" aria-valuenow={done} aria-valuemin={0} aria-valuemax={all}>
-            <div className="h-full rounded-full bg-ok transition-all" style={{ width: all ? `${(done / all) * 100}%` : "0%" }} />
+            <div className="h-full rounded-full bg-ok transition-[width] duration-500 ease-[var(--ease-spring)]" style={{ width: all ? `${(done / all) * 100}%` : "0%" }} />
           </div>
         </div>
 
@@ -139,7 +142,7 @@ export default function InwentaryzacjaPage() {
         {!data ? (
           <Skeleton rows={6} />
         ) : (
-          <ul className="flex flex-col gap-1.5">
+          <ul className="stagger flex flex-col gap-1.5">
             {shown.map((s) => (
               <li key={s.kod} className="flex items-center gap-3 rounded-[14px] border border-line bg-card py-2 pl-3 pr-2">
                 <KodChip kod={s.kod} tone={s.jest ? "ok" : s.status === "poza_szkola" ? "info" : s.status === "wypozyczony" ? "warn" : "mute"} />
@@ -158,8 +161,14 @@ export default function InwentaryzacjaPage() {
                   onClick={() => setJest(s.kod, !s.jest)}
                   className="flex h-11 w-16 items-center justify-center disabled:opacity-50"
                 >
-                  <span className={cx("relative h-7 w-12 rounded-full transition", s.jest ? "bg-ok" : "bg-line-2")}>
-                    <span className={cx("absolute top-1 h-5 w-5 rounded-full bg-bg transition-all", s.jest ? "left-6" : "left-1")} />
+                  <span className={cx("relative h-7 w-12 rounded-full transition-colors duration-300", s.jest ? "bg-ok" : "bg-line-2")}>
+                    <span
+                      className={cx(
+                        "absolute left-1 top-1 h-5 w-5 rounded-full bg-bg shadow transition-transform duration-500 ease-[var(--ease-spring)]",
+                        s.jest && "translate-x-5",
+                        pending.has(s.kod) && "scale-90",
+                      )}
+                    />
                   </span>
                 </button>
               </li>

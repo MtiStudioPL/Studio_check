@@ -6,7 +6,7 @@ import { api, ApiError, fmtDateTime, hoursSince } from "@/lib/client";
 import type { SprzetView } from "@/lib/equipment";
 import { Button, KodChip, StatusPill, pozaOpis, useToast } from "./ui";
 import { PozaSzkolaDialog } from "./poza-szkola-dialog";
-import { IX } from "./icons";
+import { Sheet, SheetCloseButton, useWide } from "./sheet";
 
 type Os = { kiedy: string; typ: string; kto: string; uwagi: string | null };
 
@@ -16,17 +16,12 @@ export function EquipmentPanel({ kod, onClose }: { kod: number; onClose: () => v
   const [d, setD] = useState<{ pozycja: SprzetView | null; os: Os[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [poza, setPoza] = useState(false);
+  const wide = useWide();
 
   useEffect(() => {
     setD(null);
     api<{ pozycja: SprzetView | null; os: Os[] }>(`/api/admin/sprzet/${kod}/os-czasu`).then(setD).catch((e) => toast((e as Error).message, "bad"));
   }, [kod, toast]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const p = d?.pozycja;
   const przypomnij = async () => {
@@ -46,14 +41,8 @@ export function EquipmentPanel({ kod, onClose }: { kod: number; onClose: () => v
     typ.startsWith("Biorę") ? "bg-warn" : typ.startsWith("Oddaję") ? "bg-ok" : typ.startsWith("Poza") ? "bg-info" : typ.startsWith("Przypomnienie") ? "bg-bad" : "bg-mute";
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50" onClick={onClose}>
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label="Szczegóły sprzętu"
-        onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-full max-w-md flex-col gap-5 overflow-y-auto border-l border-line bg-card p-5"
-      >
+    <Sheet onClose={onClose} side={wide ? "right" : "bottom"} label="Szczegóły sprzętu">
+      <div className={`flex flex-col gap-5 px-5 ${wide ? "py-5" : "pb-2 pt-1"}`}>
         <div className="flex items-start gap-3">
           <KodChip kod={kod} />
           <div className="flex-1">
@@ -70,9 +59,7 @@ export function EquipmentPanel({ kod, onClose }: { kod: number; onClose: () => v
               </p>
             )}
           </div>
-          <button onClick={onClose} aria-label="Zamknij" className="flex h-11 w-11 items-center justify-center rounded-xl text-mute">
-            <IX />
-          </button>
+          <SheetCloseButton />
         </div>
 
         {p?.status === "poza_szkola" && (
@@ -123,7 +110,7 @@ export function EquipmentPanel({ kod, onClose }: { kod: number; onClose: () => v
             </ol>
           )}
         </div>
-      </aside>
-    </div>
+      </div>
+    </Sheet>
   );
 }

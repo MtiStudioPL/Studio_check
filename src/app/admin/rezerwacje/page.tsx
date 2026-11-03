@@ -148,7 +148,7 @@ export default function RezerwacjePage() {
                       {fmtTime(r.od)}–{dayKey(r.od) === dayKey(r.do) ? fmtTime(r.do) : fmtDateTime(r.do)}
                     </span>
                     <span className="w-36 font-semibold">{r.imie}</span>
-                    <span className="min-w-0 flex-1 text-mute">{r.pozycje.map((p) => p.nazwa).join(", ")}</span>
+                    <span className="min-w-0 flex-1 basis-full text-mute sm:basis-0">{r.pozycje.map((p) => p.nazwa).join(", ")}</span>
                     <Button className="min-h-9 px-3 text-xs" onClick={() => anuluj(r)}>
                       Anuluj
                     </Button>
@@ -168,7 +168,7 @@ export default function RezerwacjePage() {
               <div key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
                 <span className="w-40 font-mono text-xs text-mute">{okres(r)}</span>
                 <span className="w-36 font-semibold">{r.imie}</span>
-                <span className="min-w-0 flex-1 truncate text-mute">{r.pozycje.map((p) => p.nazwa).join(", ")}</span>
+                <span className="min-w-0 flex-1 basis-full truncate text-mute sm:basis-0">{r.pozycje.map((p) => p.nazwa).join(", ")}</span>
                 <span className={cx("text-xs font-semibold", STATUS[r.status])}>
                   {r.status}
                   {r.powod ? ` · ${r.powod}` : ""}

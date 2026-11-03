@@ -108,9 +108,10 @@ export default function SprzetAdminPage() {
                 <Button onClick={() => setEdit(null)}>Anuluj</Button>
               </div>
             ) : (
-              <div key={s.kod} className="flex items-center gap-3 px-4 py-2.5">
+              // Telefon: nazwa w pełnej szerokości, przyciski w drugim wierszu; od sm wszystko w jednym.
+              <div key={s.kod} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:flex-nowrap">
                 <KodChip kod={s.kod} tone={s.status === "poza_szkola" ? "info" : s.status === "wypozyczony" ? "warn" : "mute"} />
-                <button onClick={() => setPanel(s.kod)} className="min-w-0 flex-1 text-left">
+                <button onClick={() => setPanel(s.kod)} className="press-soft min-w-0 flex-1 text-left">
                   <div className="truncate text-sm font-semibold">{s.nazwa}</div>
                   <div className="text-xs text-mute">
                     {s.kategoria || "—"}
@@ -122,12 +123,14 @@ export default function SprzetAdminPage() {
                 <span className="hidden sm:block">
                   <StatusPill status={s.status} over24={hoursSince(s.odKiedy) > 24} />
                 </span>
-                <Button className="min-h-10 px-3 text-sm text-info" onClick={() => setPoza(s)}>
-                  Poza szkołą
-                </Button>
-                <Button className="min-h-10 px-3 text-sm" onClick={() => setEdit(s)}>
-                  Edytuj
-                </Button>
+                <div className="flex w-full gap-2 pl-[52px] sm:w-auto sm:pl-0">
+                  <Button className="min-h-10 flex-1 px-3 text-sm text-info sm:flex-none" onClick={() => setPoza(s)}>
+                    Poza szkołą
+                  </Button>
+                  <Button className="min-h-10 flex-1 px-3 text-sm sm:flex-none" onClick={() => setEdit(s)}>
+                    Edytuj
+                  </Button>
+                </div>
               </div>
             ),
           )}

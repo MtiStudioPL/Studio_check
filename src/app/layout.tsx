@@ -20,6 +20,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Android: klawiatura zmniejsza układ, więc dolne panele same wjeżdżają nad nią (iOS obsługuje --kb).
+  interactiveWidget: "resizes-content",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

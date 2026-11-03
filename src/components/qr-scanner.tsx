@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { haptic } from "@/lib/motion";
 
 type Props = {
   onScan: (text: string) => void;
@@ -20,6 +21,7 @@ export function QrScanner({ onScan, paused, hint = "Skieruj aparat na naklejkę 
   const pausedRef = useRef(paused);
   const [state, setState] = useState<"start" | "on" | "off" | "error">("start");
   const [err, setErr] = useState("");
+  const [hit, setHit] = useState(0);
   cb.current = onScan;
   pausedRef.current = paused;
 
@@ -39,7 +41,8 @@ export function QrScanner({ onScan, paused, hint = "Skieruj aparat na naklejkę 
             const now = Date.now();
             if (text === last.current.text && now - last.current.at < 2500) return;
             last.current = { text, at: now };
-            if (navigator.vibrate) navigator.vibrate(40);
+            haptic("snap");
+            setHit((h) => h + 1);
             cb.current(text);
           },
           () => {},
@@ -69,16 +72,19 @@ export function QrScanner({ onScan, paused, hint = "Skieruj aparat na naklejkę 
   }, []);
 
   return (
-    <div className="relative h-[220px] overflow-hidden rounded-[22px] border border-[#20242B] bg-[#050608]">
+    <div className="relative h-[min(220px,32dvh)] min-h-[180px] overflow-hidden rounded-[22px] border border-[#20242B] bg-[#050608]">
       <div id="qr-reader" className="absolute inset-0" />
+      {hit > 0 && <span key={`f${hit}`} className="scan-flash pointer-events-none absolute inset-0 bg-ok/25" aria-hidden />}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2" aria-hidden>
+        <div key={hit} className={`absolute inset-0 ${hit ? "scan-hit" : ""}`}>
         <span className="absolute left-0 top-0 h-7 w-7 rounded-tl-[10px] border-l-[3px] border-t-[3px] border-rec" />
         <span className="absolute right-0 top-0 h-7 w-7 rounded-tr-[10px] border-r-[3px] border-t-[3px] border-rec" />
         <span className="absolute bottom-0 left-0 h-7 w-7 rounded-bl-[10px] border-b-[3px] border-l-[3px] border-rec" />
         <span className="absolute bottom-0 right-0 h-7 w-7 rounded-br-[10px] border-b-[3px] border-r-[3px] border-rec" />
         {state === "on" && !paused && (
-          <span className="absolute left-3 right-3 top-[74px] h-0.5 animate-pulse bg-rec shadow-[0_0_12px_2px_rgba(255,85,51,0.6)]" />
+          <span className="scan-line absolute left-3 right-3 top-0 h-0.5 bg-rec shadow-[0_0_12px_2px_rgba(255,85,51,0.6)]" />
         )}
+        </div>
       </div>
       <span className="absolute left-3 top-3 flex items-center gap-1.5 font-mono text-[11px] tracking-[0.1em] text-bad">
         <span className={`h-2 w-2 rounded-full ${state === "on" ? "bg-rec" : "bg-line-2"}`} />
