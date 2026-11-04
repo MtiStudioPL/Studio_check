@@ -28,7 +28,7 @@ export function enqueueAdmin(m: Omit<MailInput, "to">, tx?: Tx) {
   return enqueueMail({ ...m, to: config.adminNotify }, tx);
 }
 
-// --- Microsoft Graph (uprawnienie aplikacyjne Mail.Send zawężone do skrzynki studia) ---
+// --- Microsoft Graph (uprawnienie aplikacyjne Mail.Send zawężone do skrzynki studia; wymaga administratora M365) ---
 let tokenCache: { token: string; exp: number } | null = null;
 
 async function graphToken(): Promise<string> {
@@ -74,6 +74,19 @@ async function sendViaGraph(to: string, subject: string, html: string) {
   }
 }
 
+// --- SMTP (np. Gmail z hasłem aplikacji) — nie wymaga zgody administratora M365 ---
+let smtpTransport: { sendMail(m: Record<string, unknown>): Promise<unknown> } | null = null;
+
+async function sendViaSmtp(to: string, subject: string, html: string) {
+  const s = config.smtp;
+  if (!s.host || !s.user || !s.pass) throw new Error("Brak konfiguracji SMTP (SMTP_HOST, SMTP_USER, SMTP_PASS)");
+  if (!smtpTransport) {
+    const nodemailer = await import("nodemailer");
+    smtpTransport = nodemailer.createTransport({ host: s.host, port: s.port, secure: s.port === 465, auth: { user: s.user, pass: s.pass } });
+  }
+  await smtpTransport.sendMail({ from: s.from, to, subject, html });
+}
+
 const MAX_PROB = 5;
 
 /**
@@ -97,7 +110,8 @@ export async function processOutbox(limit = 25): Promise<{ wyslane: number; bled
         if (config.mailDisabled) {
           console.log(`[mail wyłączony] ${m.do}: ${m.temat}`);
         } else {
-          await sendViaGraph(m.do, m.temat, m.trescHtml);
+          if (config.mailTransport === "smtp") await sendViaSmtp(m.do, m.temat, m.trescHtml);
+          else await sendViaGraph(m.do, m.temat, m.trescHtml);
         }
         await tx
           .update(schema.mailOutbox)

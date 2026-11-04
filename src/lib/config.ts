@@ -22,6 +22,21 @@ export const config = {
   get mailbox() {
     return process.env.STUDIO_MAILBOX ?? "";
   },
+  /** "smtp" (Gmail / Brevo, bez administratora M365) albo "graph" (Mail.Send aplikacyjne). Domyślnie smtp, gdy jest SMTP_HOST. */
+  get mailTransport(): "smtp" | "graph" {
+    const t = (process.env.MAIL_TRANSPORT ?? "").toLowerCase();
+    if (t === "smtp" || t === "graph") return t;
+    return process.env.SMTP_HOST ? "smtp" : "graph";
+  },
+  get smtp() {
+    return {
+      host: process.env.SMTP_HOST ?? "",
+      port: Number(process.env.SMTP_PORT ?? 465),
+      user: process.env.SMTP_USER ?? "",
+      pass: process.env.SMTP_PASS ?? "",
+      from: process.env.MAIL_FROM ?? process.env.SMTP_USER ?? "",
+    };
+  },
   get appUrl() {
     return (process.env.APP_URL ?? process.env.AUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
   },
