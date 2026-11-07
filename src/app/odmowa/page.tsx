@@ -3,7 +3,7 @@ import Link from "next/link";
 export const metadata = { title: "Brak dostępu · Studio wideo" };
 
 const TEKSTY: Record<string, { t: string; d: string }> = {
-  domena: { t: "Ta aplikacja przyjmuje tylko konta szkolne mti.edu.pl", d: "Zaloguj się kontem szkolnym Microsoft. Konta prywatne i konta innych organizacji są odrzucane." },
+  domena: { t: "Ta aplikacja przyjmuje tylko adresy szkolne mti.edu.pl", d: "Podaj szkolny adres e-mail — kod logowania przyjdzie na tę skrzynkę. Adresy prywatne i innych organizacji są odrzucane." },
   blokada: { t: "Konto jest zablokowane", d: "Skontaktuj się z opiekunem studia, żeby je odblokować." },
 };
 

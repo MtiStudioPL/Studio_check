@@ -187,7 +187,7 @@ export default function UzytkownicyPage() {
             ))}
           </Card>
         )}
-        <p className="text-xs text-mute">„Admin z konfiguracji” to osoby z roli Studio.Admin w Entra albo z ADMIN_EMAILS — tę rolę zmienia się tam, nie w panelu.</p>
+        <p className="text-xs text-mute">„Admin z konfiguracji” to osoby z listy ADMIN_EMAILS — tę listę zmienia się w zmiennych środowiska na Vercelu, nie w panelu.</p>
       </section>
     </div>
   );

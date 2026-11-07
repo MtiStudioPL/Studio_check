@@ -30,7 +30,7 @@ function csp(nonce: string) {
     "manifest-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self' https://login.microsoftonline.com",
+    "form-action 'self'",
     "frame-ancestors 'none'",
     dev ? "" : "upgrade-insecure-requests",
   ]

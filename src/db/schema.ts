@@ -142,6 +142,15 @@ export const mailOutbox = pgTable(
   ],
 );
 
+export const kodyLogowania = pgTable("kody_logowania", {
+  email: text("email").primaryKey(),
+  kodHash: text("kod_hash").notNull(),
+  imie: text("imie").notNull().default(""),
+  wygasa: ts("wygasa").notNull(),
+  proby: integer("proby").notNull().default(0),
+  utworzono: ts("utworzono").notNull().defaultNow(),
+});
+
 export const ustawienia = pgTable("ustawienia", {
   klucz: text("klucz").primaryKey(),
   wartosc: jsonb("wartosc").notNull(),

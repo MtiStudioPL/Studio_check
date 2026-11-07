@@ -1,19 +1,19 @@
 # Studio wideo — aplikacja webowa
 
-PWA na telefon zastępująca formularz Forms, aplikację Power Apps i 8 przepływów Power Automate. Biorę / Oddaję / Sprawdzam, inwentaryzacja, przypomnienia, check-in / check-out, rezerwacje („Zajmij”), sprzęt poza szkołą, panel administratora. Logowanie wyłącznie szkolnym kontem Microsoft (`@mti.edu.pl`), a każda nowa osoba czeka na akceptację administratora.
+PWA na telefon zastępująca formularz Forms, aplikację Power Apps i 8 przepływów Power Automate. Biorę / Oddaję / Sprawdzam, inwentaryzacja, przypomnienia, check-in / check-out, rezerwacje („Zajmij”), sprzęt poza szkołą, panel administratora. Logowanie jednorazowym kodem wysłanym na szkolny adres e-mail (`@mti.edu.pl`), a każda nowa osoba czeka na akceptację administratora.
 
 ## Dostęp i role
 
 - **Akceptacja**: pierwsze logowanie zapisuje osobę jako „czeka na akceptację” i wysyła mail do administratorów. Do akceptacji sesja w ogóle nie powstaje, a każdy endpoint i tak odpowiada 403. Po akceptacji osoba dostaje maila. Odrzucenie = blokada.
 - **Role**: administrator nadaje i odbiera rolę administratora w Panel → Użytkownicy (musi zostać co najmniej jeden). Może też dodać osobę z góry (e-mail, imię, rola) — wtedy przy pierwszym logowaniu nie czeka.
-- **Administratorzy startowi**: rola `Studio.Admin` w Entra albo `ADMIN_EMAILS` — zawsze aktywni, nie da się ich zdegradować z panelu.
+- **Administratorzy startowi**: adresy z `ADMIN_EMAILS` — zawsze aktywni, nie da się ich zdegradować z panelu.
 
 ## Poza szkołą i rezerwacje
 
 - **Poza szkołą**: administrator oznacza sprzęt (dla siebie albo innej osoby) z miejscem i opcjonalnym terminem zwrotu — w Skanerze („Poza szkołą”), w Panel → Sprzęt albo w panelu sprzętu. Widać to wszędzie na niebiesko; po terminie — na czerwono i w „Wymaga uwagi”. Bez przypomnień 6 h / 19:00, nie jest brakiem w inwentaryzacji, jest w raporcie 15:30. Powrót: zwykłe „Oddaję”.
 - **Zajmij**: każdy wybiera termin i sprzęt (`/zajmij`), widzi dostępność na te godziny, wysyła wniosek. Administrator w Panel → Rezerwacje widzi każdą pozycję: dostępny / zajęty / poza szkołą / teraz u kogoś / inne wnioski — i zatwierdza albo odmawia z powodem. Osoba dostaje maila. Dwie zatwierdzone rezerwacje tego samego sprzętu nie mogą się nakładać — pilnuje tego ograniczenie w bazie (`exclude using gist`). Nierozpatrzone wnioski wygasają z początkiem terminu. Biorę na sprzęt zarezerwowany dla kogoś innego pokazuje ostrzeżenie.
 
-Next.js 16 (App Router) · TypeScript · Tailwind 4 · PostgreSQL + Drizzle · Auth.js + Entra ID · Upstash Redis · Microsoft Graph · Vercel (fra1) + Firewall + BotID.
+Next.js 16 (App Router) · TypeScript · Tailwind 4 · PostgreSQL + Drizzle · Auth.js (kod z maila) · Upstash Redis · SMTP (Gmail) · Vercel (fra1) + Firewall + BotID.
 
 ## Co gdzie jest
 
@@ -21,11 +21,11 @@ Next.js 16 (App Router) · TypeScript · Tailwind 4 · PostgreSQL + Drizzle · A
 | --- | --- |
 | `src/proxy.ts` | CSP z nonce, szybkie 401 dla `/api`, przekierowanie na `/login` |
 | `src/lib/guard.ts` | Każdy endpoint: CSRF → BotID → sesja → blokada konta → rola → limity → bezpieczne błędy |
-| `src/lib/auth.ts`, `claims.ts` | Logowanie Entra, sprawdzenie `tid`, `oid` i domeny, zapis użytkownika, audyt |
+| `src/lib/auth.ts`, `logincode.ts`, `logintoken.ts` | Logowanie kodem z maila (kod 6 cyfr, 10 min, 5 prób), bilet do Auth.js, zapis użytkownika, audyt |
 | `src/lib/equipment.ts` | Biorę / Oddaję / Sprawdzam w transakcji (`FOR UPDATE`), inwentaryzacja, braki, Przypomnij |
 | `src/lib/attendance.ts` | Check-in (HMAC kodu drzwi), check-out ze sprzętem, zamknięcie wizyty przez admina |
 | `src/lib/cron.ts` | Tick co 15 min: raport 15:30, przypomnienia 6 h i 19:00, auto check-out 21:00, retencja |
-| `src/lib/mail.ts`, `templates.ts` | Kolejka `mail_outbox`, wysyłka Graph z ponawianiem, **wszystkie treści maili** |
+| `src/lib/mail.ts`, `templates.ts` | Kolejka `mail_outbox`, wysyłka SMTP (albo Graph) z ponawianiem, **wszystkie treści maili** |
 | `src/app/(app)/*` | Ekrany telefonu: Start, Skaner, Wypożyczone, Inwentaryzacja, Obecność, `/c` (check-in), `/wyjscie` |
 | `src/app/admin/*` | Panel: Pulpit, Historia, Sprzęt (+ naklejki QR), Obecności, Użytkownicy, Audyt, Ustawienia |
 | `src/app/kiosk` | Etap 2: tablet przy drzwiach z kodem zmieniającym się co 30 s |
@@ -37,26 +37,10 @@ Next.js 16 (App Router) · TypeScript · Tailwind 4 · PostgreSQL + Drizzle · A
 
 ## Wdrożenie krok po kroku
 
-### 1. Z administratorem M365 szkoły (najpierw — to blokuje resztę)
-
-**Rejestracja aplikacji w Entra** (Microsoft Entra admin center → App registrations → New):
-- *Accounts in this organizational directory only* (single-tenant).
-- Redirect URI (Web): `https://<domena>/api/auth/callback/microsoft-entra-id` (+ `http://localhost:3000/...` do testów).
-- API permissions → delegowane: `openid`, `profile`, `email`, `User.Read`. Aplikacyjne: `Mail.Send` (zgoda administratora).
-- App roles → nowa rola `Studio.Admin` (Users/Groups), przypisana Tobie w Enterprise applications.
-- Opcjonalnie: *Assignment required* = Yes i grupa „Studio wideo – użytkownicy”.
-- Certificates & secrets → client secret (zanotuj datę wygaśnięcia).
-- Potwierdź Tenant ID (plan zakłada `cdeca4b5-…`).
-
-**Skrzynka studia** (np. `studio@mti.edu.pl`) i zawężenie `Mail.Send` tylko do niej (Exchange Online PowerShell, RBAC for Applications):
-
-```powershell
-New-ServicePrincipal -AppId <client-id> -ObjectId <object-id-z-Enterprise-apps> -DisplayName "Studio wideo"
-New-DistributionGroup -Name "Studio app scope" -Type Security -Members studio@mti.edu.pl
-New-ManagementScope -Name "Studio mailbox" -RecipientRestrictionFilter "MemberOfGroup -eq '<DN grupy>'"
-New-ManagementRoleAssignment -App <client-id> -Role "Application Mail.Send" -CustomResourceScope "Studio mailbox"
-```
-Wtedy w Entra **nie** nadawaj `Mail.Send` w API permissions (uprawnienie przychodzi z Exchange) — albo usuń je po teście.
+### 1. Poczta i logowanie (bez administratora M365)
+- **Logowanie**: osoba podaje adres `@mti.edu.pl`, aplikacja wysyła na niego 6-cyfrowy kod (ważny 10 minut, jednorazowy, 5 prób), a skrzynka szkolna potwierdza tożsamość. Nie potrzeba rejestracji w Entra ani zgody administratora. Identyfikator osoby to `mail:<adres>`.
+- **Wysyłka maili**: SMTP, np. Gmail z hasłem aplikacji (konto z 2FA → myaccount.google.com/apppasswords). Zmienne `SMTP_*` i `MAIL_FROM` w `.env.example`. **`MAIL_DISABLED` musi być `0`, bo bez maili nikt się nie zaloguje.**
+- Wysyłka przez Microsoft Graph (`MAIL_TRANSPORT=graph`, uprawnienie aplikacyjne `Mail.Send` zawężone do skrzynki studia) jest nadal w kodzie, ale wymaga administratora M365.
 
 ### 2. Baza i Redis
 1. Vercel → Storage / Marketplace → Supabase (albo Neon), region **Frankfurt**; Upstash Redis.

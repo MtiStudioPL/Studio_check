@@ -108,7 +108,7 @@ export default function UstawieniaPage() {
           <div className="text-sm text-mute">
             <p>Administratorzy awaryjni (ADMIN_EMAILS): {s.administratorzy.join(", ") || "—"}</p>
             <p>Maile administracyjne trafiają do: {s.powiadomienia.join(", ") || "—"}</p>
-            <p className="mt-1 text-xs">Te dwie listy zmienia się w zmiennych środowiska na Vercelu; rolę Studio.Admin nadaje się w Entra.</p>
+            <p className="mt-1 text-xs">Te dwie listy zmienia się w zmiennych środowiska na Vercelu.</p>
           </div>
           <div>
             <Button variant="rec" onClick={zapisz} busy={busy === "zapisz"}>

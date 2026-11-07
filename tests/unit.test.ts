@@ -4,6 +4,7 @@ import { makeKioskToken, makeStaticToken, verifyDoorToken } from "@/lib/doorToke
 import { fmtDateTime, inQuiet, nextOutsideQuiet, startOfWarsawDay, warsaw } from "@/lib/time";
 import { escapeHtml, htmlTable } from "@/lib/html";
 import { checkClaims } from "@/lib/claims";
+import { codeMatches, emailInDomain, hashCode, makeTicket, nameFromEmail, newCode, normalizeEmail, readTicket } from "@/lib/logintoken";
 import { toCsv } from "@/lib/csv";
 import { quietStart } from "@/lib/cron";
 
@@ -94,5 +95,49 @@ describe("sprawdzenia logowania", () => {
     expect(checkClaims({ tid: T, oid: "o", email: "a@gmail.com" }, T, "mti.edu.pl").ok).toBe(false);
     expect(checkClaims({ tid: T, email: "a@mti.edu.pl" }, T, "mti.edu.pl").ok).toBe(false);
     expect(checkClaims({ tid: T, oid: "o", email: "a@mti.edu.pl" }, "", "mti.edu.pl").ok).toBe(false);
+  });
+});
+
+describe("logowanie kodem z maila", () => {
+  const secret = "s".repeat(40);
+  const email = "jan.kowalski@mti.edu.pl";
+
+  it("kod: 6 cyfr, poprawny działa, zły i cudzy nie", () => {
+    const kod = newCode();
+    expect(kod).toMatch(/^\d{6}$/);
+    const h = hashCode(secret, email, kod);
+    expect(codeMatches(secret, email, kod, h)).toBe(true);
+    expect(codeMatches(secret, email, kod === "000000" ? "000001" : "000000", h)).toBe(false);
+    expect(codeMatches(secret, "inny@mti.edu.pl", kod, h)).toBe(false);
+    expect(codeMatches("t".repeat(40), email, kod, h)).toBe(false);
+    expect(codeMatches(secret, email, "12ab56", h)).toBe(false);
+  });
+
+  it("adres: normalizacja i domena", () => {
+    expect(normalizeEmail("  Jan.Kowalski@MTI.edu.pl ")).toBe(email);
+    expect(emailInDomain(email, "mti.edu.pl")).toBe(true);
+    expect(emailInDomain("jan@gmail.com", "mti.edu.pl")).toBe(false);
+    expect(emailInDomain("jan@evil.com?@mti.edu.pl", "mti.edu.pl")).toBe(false);
+    expect(emailInDomain("x@sub.mti.edu.pl", "mti.edu.pl")).toBe(false);
+    expect(emailInDomain("@mti.edu.pl", "mti.edu.pl")).toBe(false);
+    expect(emailInDomain("", "mti.edu.pl")).toBe(false);
+  });
+
+  it("imię z adresu", () => {
+    expect(nameFromEmail(email)).toBe("Jan Kowalski");
+    expect(nameFromEmail("szymonsujkowski@mti.edu.pl")).toBe("Szymonsujkowski");
+  });
+
+  it("bilet: ważny, podrobiony, przeterminowany", () => {
+    const now = 1_800_000_000_000;
+    const t = makeTicket(secret, { oid: "mail:" + email, email, name: "Jan" }, now);
+    expect(readTicket(secret, t, now + 1000)).toEqual({ oid: "mail:" + email, email, name: "Jan" });
+    expect(readTicket(secret, t, now + 61_000)).toBeNull();
+    expect(readTicket("t".repeat(40), t, now)).toBeNull();
+    const [body, sig] = t.split(".");
+    const fake = Buffer.from(JSON.stringify({ o: "mail:admin@mti.edu.pl", e: "admin@mti.edu.pl", n: "A", x: now + 5000 })).toString("base64url");
+    expect(readTicket(secret, `${fake}.${sig}`, now)).toBeNull();
+    expect(readTicket(secret, body, now)).toBeNull();
+    expect(readTicket(secret, "", now)).toBeNull();
   });
 });

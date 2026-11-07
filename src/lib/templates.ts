@@ -75,6 +75,18 @@ export function mailPrzypomnienie19(name: string, items: Item[]) {
   };
 }
 
+// --- logowanie kodem z maila ---
+export function mailKodLogowania(kod: string, ttlMin: number) {
+  return {
+    subject: `Studio wideo: kod logowania ${kod}`,
+    html: wrap(
+      `<p>Twój kod logowania do aplikacji Studio wideo:</p>` +
+        `<p style="font-size:28px;font-weight:700;letter-spacing:6px;margin:12px 0">${e(kod)}</p>` +
+        `<p>Kod jest ważny ${ttlMin} minut i działa tylko raz. Jeśli to nie Ty próbujesz się zalogować, zignoruj tę wiadomość.</p>`,
+    ),
+  };
+}
+
 // --- na żądanie (przepływ C, 5, B) ---
 export function mailPrzypomnijOsobie(name: string, items: Item[], ktoProsi: string) {
   return {

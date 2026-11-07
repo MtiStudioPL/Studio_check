@@ -20,6 +20,10 @@ export const RULES = {
   odczyt: { limit: 240, window: "1 m" },
   rezerwacja: { limit: 10, window: "1 d" },
   admin: { limit: 120, window: "1 m" },
+  // Logowanie kodem z maila: klucz = adres e-mail albo IP (osoba jeszcze nie ma sesji).
+  kod_email: { limit: 3, window: "10 m" },
+  kod_ip: { limit: 30, window: "1 h" },
+  kod_weryfikacja_ip: { limit: 30, window: "10 m" },
 } satisfies Record<string, Rule>;
 
 export type RuleName = keyof typeof RULES;

@@ -1,11 +1,11 @@
 import NextAuth from "next-auth";
-import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
-import { eq, sql } from "drizzle-orm";
+import Credentials from "next-auth/providers/credentials";
+import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { config } from "./config";
 import { writeAudit } from "./audit";
-import { upsertOnLogin } from "./users";
-import { checkClaims, emailFromClaims, type Claims } from "./claims";
+import { checkClaims, emailFromClaims } from "./claims";
+import { readTicket } from "./logintoken";
 
 export { checkClaims, emailFromClaims };
 
@@ -17,6 +17,11 @@ declare module "next-auth" {
 
 const secure = (process.env.AUTH_URL ?? process.env.APP_URL ?? "").startsWith("https://");
 
+/**
+ * Logowanie: jednorazowy kod wysłany na szkolny adres e-mail (zob. lib/logincode.ts, app/actions.ts).
+ * Kod i zapis osoby sprawdza akcja serwera; do Auth.js trafia podpisany, krótko żyjący bilet —
+ * tu zostaje tylko jego weryfikacja i utworzenie sesji.
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt", maxAge: 12 * 60 * 60, updateAge: 60 * 60 },
@@ -29,43 +34,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   providers: [
-    MicrosoftEntraID({
-      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
-      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
-      issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
-      authorization: { params: { scope: "openid profile email User.Read", prompt: "select_account" } },
-      // Bez pobierania zdjęcia z Graph — mniejsza sesja, mniej uprawnień w użyciu.
-      profile(p) {
-        return { id: p.oid ?? p.sub, name: p.name, email: emailFromClaims(p as Claims) };
+    Credentials({
+      id: "kod-mailowy",
+      name: "Kod z maila",
+      credentials: { ticket: {} },
+      async authorize(c) {
+        const p = readTicket(config.authSecret, String(c?.ticket ?? ""));
+        return p ? { id: p.oid, email: p.email, name: p.name } : null;
       },
     }),
   ],
   callbacks: {
-    async signIn({ profile }) {
-      const c = (profile ?? {}) as Claims;
-      const check = checkClaims(c, config.tenantId, config.domain);
-      if (!check.ok) {
-        await writeAudit({ zdarzenie: "logowanie", wynik: "odmowa", obiekt: emailFromClaims(c) || null, szczegoly: { powod: check.reason } });
-        return "/odmowa?powod=domena";
-      }
-      const email = emailFromClaims(c);
-      const u = await upsertOnLogin(c.oid!, email, c.name ?? email, isAdmin(c.roles, email));
-      if (u.zablokowany) {
-        await writeAudit({ userOid: c.oid, zdarzenie: "logowanie", wynik: "odmowa", szczegoly: { powod: "zablokowany" } });
-        return "/odmowa?powod=blokada";
-      }
-      await writeAudit({ userOid: c.oid, zdarzenie: "logowanie", wynik: "ok", szczegoly: u.zaakceptowany ? null : { oczekuje: true } });
-      // Bez akceptacji sesja powstaje, ale każdy endpoint z danymi odpowiada 403 „oczekuje”.
-      return u.zaakceptowany ? true : "/oczekuje";
-    },
-    async jwt({ token, profile }) {
-      if (profile) {
-        const c = profile as Claims;
-        const email = emailFromClaims(c);
-        token.oid = c.oid;
+    async jwt({ token, user }) {
+      if (user) {
+        const email = String(user.email ?? "");
+        token.oid = user.id;
         token.email = email;
-        token.name = c.name ?? email;
-        token.admin = isAdmin(c.roles, email);
+        token.name = user.name ?? email;
+        token.admin = isAdmin(undefined, email);
       }
       return token;
     },

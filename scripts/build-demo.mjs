@@ -36,7 +36,7 @@ for (const f of ["tsconfig.json", "postcss.config.mjs"]) cpSync(path.join(root, 
 writeFileSync(path.join(work, "package.json"), JSON.stringify({ name: "studio-wideo-demo", private: true, type: "module" }, null, 2));
 
 // Trasy serwerowe, proxy (CSP, sesja), BotID i ekrany blokady konta (zależne od sesji) nie istnieją w statycznym eksporcie.
-for (const rel of ["src/app/api", "src/app/q", "src/proxy.ts", "src/instrumentation-client.ts", "src/app/actions.ts", "src/app/odmowa", "src/app/oczekuje"]) {
+for (const rel of ["src/app/api", "src/app/q", "src/proxy.ts", "src/instrumentation-client.ts", "src/app/actions.ts", "src/app/odmowa", "src/app/oczekuje", "src/app/login/login-form.tsx"]) {
   rmSync(path.join(work, rel), { recursive: true, force: true });
 }
 

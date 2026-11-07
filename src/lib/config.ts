@@ -45,6 +45,11 @@ export const config = {
     if (!s || s.length < 32) throw new Error("DOOR_SECRET musi mieć co najmniej 32 znaki");
     return s;
   },
+  get authSecret() {
+    const s = process.env.AUTH_SECRET;
+    if (!s || s.length < 16) throw new Error("AUTH_SECRET musi mieć co najmniej 16 znaków");
+    return s;
+  },
   get cronSecret() {
     return process.env.CRON_SECRET ?? "";
   },
