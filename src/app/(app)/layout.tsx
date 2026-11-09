@@ -37,7 +37,7 @@ function Sidebar({ path }: { path: string }) {
         STUDIO WIDEO
       </div>
       <nav aria-label="Nawigacja" className="flex flex-col gap-1 px-3 pt-4">
-        {SIDE.map(({ href, label, Icon }) => {
+        {SIDE.filter(({ href }) => href !== "/inwentaryzacja" || me?.rola === "admin").map(({ href, label, Icon }) => {
           const on = href === "/" ? path === "/" : path === href || path.startsWith(href + "/");
           return (
             <Link

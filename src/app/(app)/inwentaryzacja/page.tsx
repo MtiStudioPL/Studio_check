@@ -29,7 +29,8 @@ export default function InwentaryzacjaPage() {
     load().catch((e) => toast((e as Error).message, "bad"));
   }, [load, toast]);
 
-  const canManage = me && (!me.inwentaryzacjaTylkoAdmin || me.rola === "admin");
+  // Inwentaryzację (odhaczanie, start, maile o brakach) prowadzi wyłącznie administrator — egzekwuje to też serwer.
+  const canManage = me?.rola === "admin";
 
   const setJest = async (kod: number, jest: boolean) => {
     if (pending.has(kod)) return;
@@ -97,6 +98,15 @@ export default function InwentaryzacjaPage() {
 
   const done = data?.liczniki.sprawdzone ?? 0;
   const all = data?.liczniki.wszystkie ?? 0;
+
+  if (me && !canManage) {
+    return (
+      <div className="flex flex-col">
+        <ScreenHeader title="Inwentaryzacja" back="/wypozyczone" />
+        <p className="mx-5 mt-2 rounded-2xl border border-line bg-card p-4 text-sm text-mute">Inwentaryzację prowadzi administrator studia.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col">

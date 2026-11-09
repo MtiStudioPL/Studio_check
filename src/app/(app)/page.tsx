@@ -119,9 +119,9 @@ export default function StartPage() {
           <ICalendar size={20} className="text-rec" /> Zajmij sprzęt na później
         </Link>
 
-        <div className="grid grid-cols-3 gap-2.5 lg:col-span-2">
+        <div className={`grid gap-2.5 lg:col-span-2 ${me?.rola === "admin" ? "grid-cols-3" : "grid-cols-2"}`}>
           <Shortcut href="/wypozyczone" label="Wypożyczone" sub={data ? `${data.liczniki.poza} szt.` : "…"} icon={<IBox className="text-warn" />} />
-          <Shortcut href="/inwentaryzacja" label="Inwentaryzacja" sub={data ? `${data.liczniki.sprawdzone} / ${data.liczniki.wszystkie}` : "…"} icon={<IClipboard className="text-ok" />} />
+          {me?.rola === "admin" && <Shortcut href="/inwentaryzacja" label="Inwentaryzacja" sub={data ? `${data.liczniki.sprawdzone} / ${data.liczniki.wszystkie}` : "…"} icon={<IClipboard className="text-ok" />} />}
           <Shortcut href="/obecnosc" label="Obecność" sub={wStudiu == null ? "…" : osoby(wStudiu)} icon={<IPeople className="text-info" />} />
         </div>
 

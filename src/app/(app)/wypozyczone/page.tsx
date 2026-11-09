@@ -51,7 +51,7 @@ export default function WypozyczonePage() {
       <ScreenHeader
         title="Wypożyczone"
         right={
-          <Link href="/inwentaryzacja" className="press mr-2 flex h-11 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-semibold">
+          me?.rola === "admin" && <Link href="/inwentaryzacja" className="press mr-2 flex h-11 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-semibold">
             <IClipboard size={18} className="text-ok" /> <span className="max-[479px]:sr-only">Inwentaryzacja</span>
           </Link>
         }

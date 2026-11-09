@@ -92,10 +92,6 @@ export default function UstawieniaPage() {
             </label>
             <p className="pb-3 text-xs text-mute">W ciszy nie wychodzą przypomnienia, a o jej początku otwarte wizyty zamykają się automatycznie.</p>
           </div>
-          <label className="flex items-center gap-3 text-sm">
-            <input type="checkbox" checked={s.inwentaryzacjaTylkoAdmin} onChange={(e) => setS({ ...s, inwentaryzacjaTylkoAdmin: e.target.checked })} className="h-5 w-5 accent-[#FF5533]" />
-            Start inwentaryzacji i maile o brakach tylko dla administratora
-          </label>
           <fieldset className="flex flex-col gap-2 text-sm">
             <legend className="mb-1">Check-in w godzinach ciszy</legend>
             <label className="flex items-center gap-3">
