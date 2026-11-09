@@ -69,7 +69,7 @@ export default function StartPage() {
         <p className="mt-1.5 text-sm text-mute first-letter:uppercase">{fmtDayLong()}</p>
       </section>
 
-      <div className="stagger flex flex-col gap-3 px-5 pt-4">
+      <div className="stagger flex flex-col gap-3 px-5 pt-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
         {me?.wizyta ? (
           <Card className="flex items-center gap-3 py-3 pl-4 pr-3">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-ok shadow-[0_0_0_5px_rgba(61,220,151,0.16)]" />
@@ -119,13 +119,13 @@ export default function StartPage() {
           <ICalendar size={20} className="text-rec" /> Zajmij sprzęt na później
         </Link>
 
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2.5 lg:col-span-2">
           <Shortcut href="/wypozyczone" label="Wypożyczone" sub={data ? `${data.liczniki.poza} szt.` : "…"} icon={<IBox className="text-warn" />} />
           <Shortcut href="/inwentaryzacja" label="Inwentaryzacja" sub={data ? `${data.liczniki.sprawdzone} / ${data.liczniki.wszystkie}` : "…"} icon={<IClipboard className="text-ok" />} />
           <Shortcut href="/obecnosc" label="Obecność" sub={wStudiu == null ? "…" : osoby(wStudiu)} icon={<IPeople className="text-info" />} />
         </div>
 
-        <section className="stagger mt-1 flex flex-col gap-2">
+        <section className="stagger mt-1 flex flex-col gap-2 lg:col-span-2 lg:grid lg:grid-cols-2 lg:gap-2.5 lg:[&>:first-child]:col-span-2">
           <div className="flex items-baseline justify-between">
             <h2 className="label">Masz u siebie</h2>
             <span className="font-mono text-xs text-mute">{mine.length} szt.</span>
@@ -133,7 +133,7 @@ export default function StartPage() {
           {!data ? (
             <Skeleton rows={2} />
           ) : mine.length === 0 ? (
-            <p className="text-sm text-mute">Nic nie jest zapisane na Ciebie.</p>
+            <p className="text-sm text-mute lg:col-span-2">Nic nie jest zapisane na Ciebie.</p>
           ) : (
             mine.map((s) => (
               <div key={s.kod} className="flex items-center gap-3 rounded-[14px] border border-line bg-card py-2 pl-3 pr-2">

@@ -4,6 +4,12 @@ import { db, schema } from "@/db";
 import { enqueueAdmin, flushOutboxSoon } from "./mail";
 import { mailNowaOsoba } from "./templates";
 
+/** Czy konto z tym adresem już istnieje (także dodane wcześniej przez administratora). */
+export async function userExists(email: string): Promise<boolean> {
+  const [r] = await db.select({ oid: schema.uzytkownicy.oid }).from(schema.uzytkownicy).where(eq(schema.uzytkownicy.email, email)).limit(1);
+  return !!r;
+}
+
 /**
  * Zapis użytkownika przy logowaniu.
  *  - nowa osoba: konto czeka na akceptację (mail do administratorów),

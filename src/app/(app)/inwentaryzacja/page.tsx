@@ -101,7 +101,8 @@ export default function InwentaryzacjaPage() {
   return (
     <div className="flex flex-col">
       <ScreenHeader title="Inwentaryzacja" back="/wypozyczone" />
-      <div className="flex flex-col gap-3 px-5 pt-2">
+      <div className="flex flex-col gap-3 px-5 pt-2 lg:grid lg:grid-cols-[340px_1fr] lg:items-start lg:gap-6">
+        <div className="flex flex-col gap-3 lg:sticky lg:top-4">
         <div className="rounded-[18px] border border-line bg-card p-4">
           <div className="flex items-baseline justify-between">
             <span className="font-mono text-[28px] font-semibold">
@@ -125,6 +126,19 @@ export default function InwentaryzacjaPage() {
           </Button>
         )}
 
+        {canManage && (
+          <div className="hidden grid-cols-1 gap-2 border-t border-line pt-4 lg:grid">
+            <Button onClick={braki} busy={busy === "braki"} disabled={!!busy}>
+              Wyślij przypomnienia o brakach
+            </Button>
+            <Button variant="danger" onClick={start} busy={busy === "start"} disabled={!!busy}>
+              Rozpocznij nową inwentaryzację
+            </Button>
+          </div>
+        )}
+        </div>
+
+        <div className="flex flex-col gap-3">
         <div className="grid grid-cols-3 gap-1 rounded-[14px] border border-line bg-card p-1" role="tablist" aria-label="Filtr">
           {(["wszystko", "brakuje", "bezqr"] as Filtr[]).map((f) => (
             <button
@@ -177,7 +191,7 @@ export default function InwentaryzacjaPage() {
         )}
 
         {canManage && (
-          <div className="mt-2 grid grid-cols-1 gap-2 border-t border-line pt-4">
+          <div className="mt-2 grid grid-cols-1 gap-2 border-t border-line pt-4 lg:hidden">
             <Button onClick={braki} busy={busy === "braki"} disabled={!!busy}>
               Wyślij przypomnienia o brakach
             </Button>
@@ -186,6 +200,7 @@ export default function InwentaryzacjaPage() {
             </Button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

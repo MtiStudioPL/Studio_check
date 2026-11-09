@@ -27,7 +27,7 @@ export default function ObecnoscPage() {
   return (
     <div className="flex flex-col">
       <ScreenHeader title="Obecność" />
-      <div className="flex flex-col gap-4 px-5 pt-2">
+      <div className="flex flex-col gap-4 px-5 pt-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6">
         {me?.wizyta ? (
           <Card className="flex flex-col gap-3 p-4">
             <div className="flex items-center gap-3">
@@ -66,7 +66,7 @@ export default function ObecnoscPage() {
           )}
         </section>
 
-        <section className="flex flex-col gap-2">
+        <section className="flex flex-col gap-2 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <h2 className="label">Moje wizyty · 30 dni</h2>
           {!moje ? (
             <Skeleton rows={3} />

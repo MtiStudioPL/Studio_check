@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             Sprzęt i obecność
             <br />w studiu.
           </h1>
-          <p className="mt-4 text-[15px] text-mute">Biorę, oddaję, inwentaryzacja i check-in — z telefonu, po zalogowaniu kodem wysłanym na szkolny adres e-mail.</p>
+          <p className="mt-4 text-[15px] text-mute">Biorę, oddaję, inwentaryzacja i check-in — z telefonu, po zalogowaniu kodem wysłanym na szkolny adres e-mail. Pierwszy raz tutaj? Najpierw załóż konto.</p>
         </div>
 
         {sp.wylogowano && <p className="rounded-2xl border border-line bg-card p-4 text-sm text-mute">Wylogowano.</p>}

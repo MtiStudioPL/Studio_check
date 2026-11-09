@@ -143,7 +143,8 @@ function Zajmij() {
   return (
     <div className="flex flex-col">
       <ScreenHeader title="Zajmij sprzęt" />
-      <div className={cx("flex flex-col gap-4 px-5 pt-2", wybrane.size > 0 && "pb-36")}>
+      <div className={cx("flex flex-col gap-4 px-5 pt-2 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start lg:gap-6", wybrane.size > 0 && "pb-36")}>
+        <div className="flex flex-col gap-4">
         <p className="text-[13px] text-mute">Wybierz termin i sprzęt. Wniosek trafia do administratora, który go zatwierdza albo odrzuca.</p>
 
         <div className="grid grid-cols-2 gap-3 rounded-[18px] border border-line bg-card p-4">
@@ -194,8 +195,9 @@ function Zajmij() {
             })}
           </ul>
         )}
+        </div>
 
-        <section className="mt-2 flex flex-col gap-2">
+        <section className="mt-2 flex flex-col gap-2 lg:sticky lg:top-4 lg:mt-0">
           <h2 className="label">Moje rezerwacje</h2>
           {!moje ? (
             <Skeleton rows={2} />
@@ -227,7 +229,7 @@ function Zajmij() {
 
       {wybrane.size > 0 && (
         <div
-          className="material slide-up fixed inset-x-0 z-30 mx-auto flex max-w-md flex-col gap-2 rounded-t-[22px] border-t border-line px-5 py-3 shadow-[0_-16px_40px_rgba(0,0,0,0.5)]"
+          className="material slide-up fixed inset-x-0 z-30 mx-auto flex max-w-md flex-col gap-2 rounded-t-[22px] border-t border-line px-5 py-3 shadow-[0_-16px_40px_rgba(0,0,0,0.5)] lg:left-60 lg:max-w-3xl"
           style={{ bottom: "max(var(--nav-h), var(--kb))" }}
         >
           <input value={cel} onChange={(e) => setCel(e.target.value)} maxLength={500} placeholder="Do czego? np. nagranie wywiadu (opcjonalnie)" aria-label="Cel rezerwacji" className="inp" />

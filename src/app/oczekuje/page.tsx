@@ -12,7 +12,7 @@ export default function OczekujePage() {
       </div>
       <h1 className="wide text-3xl font-extrabold leading-tight">Konto czeka na akceptację</h1>
       <p className="text-mute">
-        Z aplikacji korzysta tylko ekipa studia. Administrator dostał powiadomienie o Twoim logowaniu. Gdy zaakceptuje konto, dostaniesz maila — wtedy zaloguj się
+        Z aplikacji korzysta tylko ekipa studia. Administrator dostał powiadomienie o Twojej rejestracji. Gdy zaakceptuje konto, dostaniesz maila — wtedy zaloguj się
         ponownie.
       </p>
       <Link href="/login" className="flex h-14 items-center justify-center rounded-2xl border border-line-2 font-semibold">

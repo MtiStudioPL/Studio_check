@@ -137,20 +137,22 @@ function Skaner() {
   return (
     <div className="flex flex-col">
       <ScreenHeader title={tryb === "drzwi" ? "Kod drzwi" : "Skaner"} />
-      <div className={`flex flex-col gap-3.5 px-5 pt-2 ${sel ? "pb-80" : ""}`}>
-        <QrScanner onScan={onScan} paused={!!sel || !!busy} hint={tryb === "drzwi" ? "Zeskanuj kod QR przy drzwiach studia" : undefined} label={tryb === "drzwi" ? "DRZWI" : "SKAN"} />
+      <div className={`flex flex-col gap-3.5 px-5 pt-2 lg:grid lg:items-start lg:gap-6 ${tryb === "sprzet" ? "lg:grid-cols-2" : "lg:mx-auto lg:max-w-xl"} ${sel ? "pb-80" : ""}`}>
+        <div className="flex flex-col gap-3.5 lg:sticky lg:top-4">
+          <QrScanner onScan={onScan} paused={!!sel || !!busy} hint={tryb === "drzwi" ? "Zeskanuj kod QR przy drzwiach studia" : undefined} label={tryb === "drzwi" ? "DRZWI" : "SKAN"} />
 
-        {proponujCheckin && (
-          <div className="flex items-center gap-3 rounded-[14px] border border-info/30 bg-card p-3">
-            <span className="flex-1 text-sm">Jesteś w studiu? Zrób check-in, żeby było wiadomo, kto korzysta.</span>
-            <Link href="/skaner?tryb=drzwi" onClick={() => setProponujCheckin(false)} className="flex h-11 items-center gap-1.5 rounded-xl border border-line-2 px-3 text-sm font-semibold">
-              <IEnter size={16} /> Check-in
-            </Link>
-          </div>
-        )}
+          {proponujCheckin && (
+            <div className="flex items-center gap-3 rounded-[14px] border border-info/30 bg-card p-3">
+              <span className="flex-1 text-sm">Jesteś w studiu? Zrób check-in, żeby było wiadomo, kto korzysta.</span>
+              <Link href="/skaner?tryb=drzwi" onClick={() => setProponujCheckin(false)} className="flex h-11 items-center gap-1.5 rounded-xl border border-line-2 px-3 text-sm font-semibold">
+                <IEnter size={16} /> Check-in
+              </Link>
+            </div>
+          )}
+        </div>
 
         {tryb === "sprzet" && (
-          <>
+          <div className="flex flex-col gap-3.5">
             <div className="flex flex-col gap-2">
               <label htmlFor="szukaj" className="text-[13px] text-mute">
                 …albo wybierz sprzęt bez QR
@@ -186,7 +188,7 @@ function Skaner() {
                 {shown.length === 0 && <li className="py-4 text-center text-sm text-mute">Nic nie pasuje do „{q}”.</li>}
               </ul>
             )}
-          </>
+          </div>
         )}
       </div>
 

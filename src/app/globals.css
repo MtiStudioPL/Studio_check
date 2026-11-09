@@ -98,6 +98,10 @@ body::before {
   /* Sprężyna z lekkim odbiciem (tłumienie ≈ 0.8) jako krzywa CSS; starsze przeglądarki biorą --ease-out. */
   --ease-spring: var(--ease-out);
 }
+/* Na komputerze nie ma dolnej nawigacji — menu jest z boku. */
+@media (min-width: 1024px) {
+  :root { --nav-h: 0px; }
+}
 @supports (transition-timing-function: linear(0, 1)) {
   :root {
     --ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017 19.4%, 1.077, 1.121 24.6%, 1.149 27.3%, 1.158 29.9%, 1.155 32.4%, 1.135 35.5%, 1.064 42.6%, 1.025 47.3%, 0.997 52.1%, 0.986 56.5%, 0.983 61.1%, 0.992 71.9%, 1);

@@ -9,7 +9,7 @@ import { config } from "@/lib/config";
 import { hit } from "@/lib/ratelimit";
 import { requestLoginCode, savedName, verifyLoginCode } from "@/lib/logincode";
 import { emailInDomain, makeTicket, nameFromEmail, normalizeEmail } from "@/lib/logintoken";
-import { upsertOnLogin } from "@/lib/users";
+import { upsertOnLogin, userExists } from "@/lib/users";
 
 /** Tylko ścieżki wewnątrz aplikacji — bez otwartego przekierowania. */
 function safeNext(v: FormDataEntryValue | null): string {
@@ -22,9 +22,13 @@ async function ipFromHeaders(): Promise<string | null> {
   return h.get("x-real-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 }
 
-export type LoginState = { krok: "email" | "kod"; email?: string; blad?: string };
+export type LoginState = { krok: "email" | "kod"; email?: string; imie?: string; blad?: string };
 
-/** Krok 1: adres e-mail → kod na skrzynkę szkolną. */
+const trybOf = (form: FormData): "login" | "rejestracja" => (form.get("tryb") === "rejestracja" ? "rejestracja" : "login");
+const BRAK_KONTA = "Nie ma jeszcze konta z tym adresem. Najpierw się zarejestruj.";
+const MA_KONTO = "Ten adres ma już konto. Zaloguj się.";
+
+/** Krok 1: adres e-mail → kod na skrzynkę szkolną. Logowanie wymaga istniejącego konta, rejestracja — nowego adresu i imienia. */
 export async function poprosOKodAction(_prev: LoginState, form: FormData): Promise<LoginState> {
   const ip = await ipFromHeaders();
   if (await isBot()) {
@@ -36,20 +40,30 @@ export async function poprosOKodAction(_prev: LoginState, form: FormData): Promi
     await writeAudit({ zdarzenie: "logowanie", obiekt: email || null, wynik: "odmowa", szczegoly: { powod: "zla_domena" }, ip });
     return { krok: "email", email, blad: `Podaj szkolny adres e-mail (@${config.domain}).` };
   }
-  const imie = String(form.get("imie") ?? "").trim().slice(0, 80);
+  const tryb = trybOf(form);
+  const imie = tryb === "rejestracja" ? String(form.get("imie") ?? "").trim().replace(/\s+/g, " ").slice(0, 80) : "";
+  const istnieje = await userExists(email);
+  if (tryb === "rejestracja") {
+    if (imie.length < 3) return { krok: "email", email, blad: "Podaj imię i nazwisko." };
+    if (istnieje) return { krok: "email", email, blad: MA_KONTO };
+  } else if (!istnieje && !isAdmin(undefined, email)) {
+    await writeAudit({ zdarzenie: "logowanie", obiekt: email, wynik: "odmowa", szczegoly: { powod: "brak_konta" }, ip });
+    return { krok: "email", email, blad: BRAK_KONTA };
+  }
   if ((await requestLoginCode(email, imie, ip)) === "limit") {
     await writeAudit({ zdarzenie: "kod_limit", obiekt: email, wynik: "limit", ip });
     return { krok: "email", email, blad: "Za dużo prób. Spróbuj za kilka minut." };
   }
   await writeAudit({ zdarzenie: "kod_wyslany", obiekt: email, wynik: "ok", ip });
-  return { krok: "kod", email };
+  return { krok: "kod", email, imie };
 }
 
-/** Krok 2: kod z maila → sesja (albo „czeka na akceptację” / blokada). */
+/** Krok 2: kod z maila → sesja (logowanie) albo założenie konta czekającego na akceptację (rejestracja). */
 export async function zalogujKodemAction(_prev: LoginState, form: FormData): Promise<LoginState> {
   const ip = await ipFromHeaders();
   const email = normalizeEmail(form.get("email"));
   const kod = String(form.get("kod") ?? "").replace(/\D/g, "");
+  const tryb = trybOf(form);
   const wroc = (blad: string): LoginState => ({ krok: "kod", email, blad });
 
   if (await isBot()) {
@@ -67,6 +81,10 @@ export async function zalogujKodemAction(_prev: LoginState, form: FormData): Pro
     await writeAudit({ zdarzenie: "logowanie", obiekt: email, wynik: "odmowa", szczegoly: { powod: v.powod }, ip });
     return wroc(v.powod === "wygasl" ? "Kod wygasł albo został zużyty. Wyślij nowy." : "Niepoprawny kod.");
   }
+
+  const istnieje = await userExists(email);
+  if (tryb === "rejestracja" && istnieje) return { krok: "email", blad: MA_KONTO };
+  if (tryb === "login" && !istnieje && !isAdmin(undefined, email)) return { krok: "email", blad: BRAK_KONTA };
 
   const oid = `mail:${email}`;
   const imie = v.imie || (await savedName(email)) || nameFromEmail(email);

@@ -5,6 +5,7 @@ import { initBotId } from "botid/client/core";
 initBotId({
   protect: [
     { path: "/login", method: "POST" },
+    { path: "/rejestracja", method: "POST" },
     { path: "/api/akcja", method: "POST" },
     { path: "/api/obecnosc/checkin", method: "POST" },
     { path: "/api/obecnosc/checkout", method: "POST" },

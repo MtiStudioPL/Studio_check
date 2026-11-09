@@ -52,11 +52,11 @@ export default function WypozyczonePage() {
         title="Wypożyczone"
         right={
           <Link href="/inwentaryzacja" className="press mr-2 flex h-11 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-semibold">
-            <IClipboard size={18} className="text-ok" /> <span className="max-[359px]:sr-only">Inwentaryzacja</span>
+            <IClipboard size={18} className="text-ok" /> <span className="max-[479px]:sr-only">Inwentaryzacja</span>
           </Link>
         }
       />
-      <div className="stagger flex flex-col gap-2 px-5 pt-2">
+      <div className="stagger flex flex-col gap-2 px-5 pt-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:[&>:not(div)]:col-span-2">
         <p className="text-[13px] text-mute">Najdłużej wypożyczone na górze. Ponad 24 h na czerwono, poza szkołą na niebiesko.</p>
         {!lista ? (
           <Skeleton rows={4} />
