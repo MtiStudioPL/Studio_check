@@ -237,6 +237,8 @@ button { touch-action: manipulation; }
 #qr-reader video { object-fit: cover; width: 100% !important; height: 100% !important; }
 #qr-reader { border: 0 !important; }
 #qr-reader img[alt="Info icon"], #qr-reader__dashboard { display: none !important; }
+/* Własna ramka z QrScanner zastępuje białą ramkę biblioteki (inaczej widać dwie, jedna na drugiej). */
+#qr-reader #qr-shaded-region { display: none !important; }
 
 @media print {
   html, body { background: #fff !important; color: #000 !important; }
