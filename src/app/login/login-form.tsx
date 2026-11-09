@@ -10,7 +10,7 @@ const primary = "flex h-16 items-center justify-center rounded-2xl bg-rec text-l
 type Tryb = "login" | "rejestracja";
 
 /** Wspólny mechanizm kodu z maila; ekran logowania i ekran rejestracji to osobne strony z osobnymi formularzami. */
-function CodeForm({ tryb, next, domena }: { tryb: Tryb; next: string; domena: string }) {
+function CodeForm({ tryb, next, domena, ft }: { tryb: Tryb; next: string; domena: string; ft: string }) {
   const [s1, poproś, czeka1] = useActionState<LoginState, FormData>(poprosOKodAction, { krok: "email" });
   const [s2, zaloguj, czeka2] = useActionState<LoginState, FormData>(zalogujKodemAction, { krok: "kod" });
   // Błąd z kroku 2 może cofnąć do e-maila (np. „masz już konto”) — pokazujemy wtedy ten stan.
@@ -24,6 +24,8 @@ function CodeForm({ tryb, next, domena }: { tryb: Tryb; next: string; domena: st
     return (
       <form action={poproś} className="flex flex-col gap-3">
         <input type="hidden" name="tryb" value={tryb} />
+        <input type="hidden" name="t" value={ft} />
+        <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
         {rej && (
           <input name="imie" type="text" autoComplete="name" required minLength={3} maxLength={80} placeholder="Imię i nazwisko" className={input} />
         )}
@@ -60,6 +62,8 @@ function CodeForm({ tryb, next, domena }: { tryb: Tryb; next: string; domena: st
       </form>
       <form action={poproś} className="flex justify-center">
         <input type="hidden" name="tryb" value={tryb} />
+        <input type="hidden" name="t" value={ft} />
+        <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
         <input type="hidden" name="email" value={email} />
         {rej && <input type="hidden" name="imie" value={s1.imie ?? ""} />}
         <button disabled={czeka1} className="text-xs text-mute underline underline-offset-2">
@@ -70,10 +74,10 @@ function CodeForm({ tryb, next, domena }: { tryb: Tryb; next: string; domena: st
   );
 }
 
-export function LoginForm({ next, domena }: { next: string; domena: string }) {
-  return <CodeForm tryb="login" next={next} domena={domena} />;
+export function LoginForm({ next, domena, ft }: { next: string; domena: string; ft: string }) {
+  return <CodeForm tryb="login" next={next} domena={domena} ft={ft} />;
 }
 
-export function RegisterForm({ domena }: { domena: string }) {
-  return <CodeForm tryb="rejestracja" next="/" domena={domena} />;
+export function RegisterForm({ domena, ft }: { domena: string; ft: string }) {
+  return <CodeForm tryb="rejestracja" next="/" domena={domena} ft={ft} />;
 }

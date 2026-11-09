@@ -24,6 +24,7 @@ export const RULES = {
   kod_email: { limit: 3, window: "10 m" },
   kod_ip: { limit: 30, window: "1 h" },
   kod_weryfikacja_ip: { limit: 30, window: "10 m" },
+  kod_weryfikacja_email: { limit: 10, window: "10 m" },
 } satisfies Record<string, Rule>;
 
 export type RuleName = keyof typeof RULES;

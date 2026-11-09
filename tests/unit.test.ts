@@ -4,7 +4,7 @@ import { makeKioskToken, makeStaticToken, verifyDoorToken } from "@/lib/doorToke
 import { fmtDateTime, inQuiet, nextOutsideQuiet, startOfWarsawDay, warsaw } from "@/lib/time";
 import { escapeHtml, htmlTable } from "@/lib/html";
 import { checkClaims } from "@/lib/claims";
-import { codeMatches, emailInDomain, hashCode, makeTicket, nameFromEmail, newCode, normalizeEmail, readTicket } from "@/lib/logintoken";
+import { checkFormToken, makeFormToken, codeMatches, emailInDomain, hashCode, makeTicket, nameFromEmail, newCode, normalizeEmail, readTicket } from "@/lib/logintoken";
 import { toCsv } from "@/lib/csv";
 import { quietStart } from "@/lib/cron";
 
@@ -139,5 +139,20 @@ describe("logowanie kodem z maila", () => {
     expect(readTicket(secret, `${fake}.${sig}`, now)).toBeNull();
     expect(readTicket(secret, body, now)).toBeNull();
     expect(readTicket(secret, "", now)).toBeNull();
+  });
+});
+
+describe("token formularza (ochrona przed botami)", () => {
+  const s = "sekret-testowy-123456789012345678901234";
+  it("odrzuca zbyt szybkie wysłanie, przyjmuje po 2 s, odrzuca stare i podrobione", () => {
+    const t0 = 1_000_000;
+    const tok = makeFormToken(s, t0);
+    expect(checkFormToken(s, tok, t0 + 500)).toBe("za_szybko");
+    expect(checkFormToken(s, tok, t0 + 3000)).toBe("ok");
+    expect(checkFormToken(s, tok, t0 + 3 * 3600_000)).toBe("wygasl");
+    expect(checkFormToken(s, tok.replace(/.$/, "x"), t0 + 3000)).toBe("zly");
+    expect(checkFormToken("inny-sekret", tok, t0 + 3000)).toBe("zly");
+    expect(checkFormToken(s, "", t0)).toBe("zly");
+    expect(checkFormToken(s, null, t0)).toBe("zly");
   });
 });

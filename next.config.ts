@@ -9,6 +9,8 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=(), payment=()" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
 ];
 
 const nextConfig: NextConfig = {
@@ -20,6 +22,11 @@ const nextConfig: NextConfig = {
       {
         // Dane nigdy nie lądują w cache przeglądarki ani CDN.
         source: "/api/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+      },
+      {
+        // Ekrany logowania nie trafiają do cache (token formularza jest jednorazowy w czasie).
+        source: "/:path(login|rejestracja)",
         headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
       },
       {

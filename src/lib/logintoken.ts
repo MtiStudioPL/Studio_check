@@ -61,3 +61,26 @@ export function readTicket(secret: string, token: string, now = Date.now()): Tic
     return null;
   }
 }
+
+/**
+ * Ochrona formularzy przed botami (obok BotID): token z czasem wydania, podpisany po stronie serwera.
+ * Zbyt szybkie wysłanie (< 2 s od wyświetlenia) albo token starszy niż 2 h są odrzucane.
+ */
+const FORM_MIN_MS = 2_000;
+const FORM_MAX_MS = 2 * 60 * 60_000;
+
+export function makeFormToken(secret: string, now = Date.now()): string {
+  const body = String(now);
+  return `${body}.${createHmac("sha256", secret).update(`formularz|${body}`).digest("base64url")}`;
+}
+
+export function checkFormToken(secret: string, token: unknown, now = Date.now()): "ok" | "za_szybko" | "wygasl" | "zly" {
+  if (typeof token !== "string" || token.length > 100) return "zly";
+  const [body, sig, ...rest] = token.split(".");
+  if (!body || !sig || rest.length || !/^\d+$/.test(body)) return "zly";
+  if (!safeEq(sig, createHmac("sha256", secret).update(`formularz|${body}`).digest("base64url"))) return "zly";
+  const age = now - Number(body);
+  if (age < FORM_MIN_MS) return "za_szybko";
+  if (age > FORM_MAX_MS) return "wygasl";
+  return "ok";
+}

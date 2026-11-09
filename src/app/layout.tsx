@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { ToastProvider } from "@/components/ui";
 import { SwRegister } from "@/components/sw-register";
+import { CookieNotice } from "@/components/cookie-notice";
 import "./globals.css";
 
 
@@ -32,6 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased">
         <ToastProvider>{children}</ToastProvider>
         <SwRegister />
+        <CookieNotice />
       </body>
     </html>
   );

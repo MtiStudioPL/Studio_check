@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ToastProvider } from "@/components/ui";
 import { DemoBar } from "@/components/demo-bar";
+import { CookieNotice } from "@/components/cookie-notice";
 import "./globals.css";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToastProvider>
           {children}
           <DemoBar />
+          <CookieNotice />
         </ToastProvider>
       </body>
     </html>

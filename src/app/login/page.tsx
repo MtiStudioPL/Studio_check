@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { config } from "@/lib/config";
+import { makeFormToken } from "@/lib/logintoken";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Logowanie · Studio wideo" };
@@ -30,7 +31,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
         {sp.wylogowano && <p className="rounded-2xl border border-line bg-card p-4 text-sm text-mute">Wylogowano.</p>}
 
-        <LoginForm next={next} domena={config.domain} />
+        <LoginForm next={next} domena={config.domain} ft={makeFormToken(config.authSecret)} />
       </div>
 
       <p className="text-xs leading-relaxed text-mute">

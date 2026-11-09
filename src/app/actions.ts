@@ -8,7 +8,7 @@ import { writeAudit } from "@/lib/audit";
 import { config } from "@/lib/config";
 import { hit } from "@/lib/ratelimit";
 import { requestLoginCode, savedName, verifyLoginCode } from "@/lib/logincode";
-import { emailInDomain, makeTicket, nameFromEmail, normalizeEmail } from "@/lib/logintoken";
+import { checkFormToken, emailInDomain, makeTicket, nameFromEmail, normalizeEmail } from "@/lib/logintoken";
 import { upsertOnLogin, userExists } from "@/lib/users";
 
 /** Tylko ścieżki wewnątrz aplikacji — bez otwartego przekierowania. */
@@ -36,6 +36,13 @@ export async function poprosOKodAction(_prev: LoginState, form: FormData): Promi
     return { krok: "email", blad: "Odmowa dostępu." };
   }
   const email = normalizeEmail(form.get("email"));
+  // Pułapka na boty (ukryte pole) i token czasu wydania formularza.
+  const ft = checkFormToken(config.authSecret, form.get("t"));
+  if (String(form.get("website") ?? "") !== "" || ft === "zly" || ft === "za_szybko") {
+    await writeAudit({ zdarzenie: "bot_formularz", obiekt: email || null, wynik: "odmowa", szczegoly: { powod: ft === "ok" ? "pulapka" : ft }, ip });
+    return { krok: "email", email, blad: "Odmowa dostępu." };
+  }
+  if (ft === "wygasl") return { krok: "email", email, blad: "Formularz wygasł. Odśwież stronę i spróbuj ponownie." };
   if (!emailInDomain(email, config.domain)) {
     await writeAudit({ zdarzenie: "logowanie", obiekt: email || null, wynik: "odmowa", szczegoly: { powod: "zla_domena" }, ip });
     return { krok: "email", email, blad: `Podaj szkolny adres e-mail (@${config.domain}).` };
@@ -71,7 +78,7 @@ export async function zalogujKodemAction(_prev: LoginState, form: FormData): Pro
     return wroc("Odmowa dostępu.");
   }
   if (!emailInDomain(email, config.domain)) return { krok: "email", blad: `Podaj szkolny adres e-mail (@${config.domain}).` };
-  if (!(await hit("kod_weryfikacja_ip", ip ?? "brak"))) {
+  if (!(await hit("kod_weryfikacja_ip", ip ?? "brak")) || !(await hit("kod_weryfikacja_email", email))) {
     await writeAudit({ zdarzenie: "kod_limit", obiekt: email, wynik: "limit", ip });
     return wroc("Za dużo prób. Spróbuj za kilka minut.");
   }

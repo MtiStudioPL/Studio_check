@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { config } from "@/lib/config";
+import { makeFormToken } from "@/lib/logintoken";
 import { RegisterForm } from "../login/login-form";
 
 export const metadata = { title: "Rejestracja · Studio wideo" };
@@ -27,7 +28,7 @@ export default async function RejestracjaPage() {
           </p>
         </div>
 
-        <RegisterForm domena={config.domain} />
+        <RegisterForm domena={config.domain} ft={makeFormToken(config.authSecret)} />
       </div>
 
       <p className="text-xs leading-relaxed text-mute">
