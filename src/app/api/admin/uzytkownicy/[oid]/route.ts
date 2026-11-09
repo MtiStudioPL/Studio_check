@@ -16,7 +16,7 @@ const B = z.discriminatedUnion("akcja", [
 
 function parseOid(raw: string) {
   const oid = decodeURIComponent(raw);
-  if (!/^[0-9a-f-]{36}$/i.test(oid) && !/^dodany:[^\s@]+@[^\s@]+$/.test(oid)) throw new HttpError(400, "zle_oid", "Niepoprawny identyfikator.");
+  if (!/^[0-9a-f-]{36}$/i.test(oid) && !/^(dodany|mail):[^\s@]+@[^\s@]+$/.test(oid)) throw new HttpError(400, "zle_oid", "Niepoprawny identyfikator.");
   return oid;
 }
 
